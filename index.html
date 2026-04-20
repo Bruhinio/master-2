@@ -1,0 +1,1749 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#075e54">
+<title>EmpresaHub Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --g:#25D366;--gd:#128C7E;--gdk:#075e54;--gpill:#D4F5E2;--gptxt:#1B7A42;
+  --blue:#34B7F1;--red:#ed4245;--amber:#f0b132;--purple:#a855f7;--indigo:#0088cc;
+  --gray:#8E8E93;--glite:#F6F6F6;--gmid:#C7C7CC;--sep:#E5E5E5;
+  --white:#FFFFFF;--black:#111111;--hover:#F5F5F5;--bg-msg:#e5ddd5;
+  --font:'Plus Jakarta Sans',-apple-system,sans-serif;
+  --radius:12px;--shadow:0 2px 8px rgba(0,0,0,.08);
+}
+html,body{height:100%;overflow:hidden;background:#111;}
+
+/* ── APP SHELL ───────────────────────────────────────── */
+#app{width:100%;max-width:430px;height:100dvh;height:100vh;margin:0 auto;
+  display:flex;flex-direction:column;background:var(--white);position:relative;
+  overflow:hidden;font-family:var(--font);}
+
+/* ── SCREENS ─────────────────────────────────────────── */
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;
+  background:var(--white);transition:transform .3s cubic-bezier(.25,.46,.45,.94);}
+#S-chat{transform:translateX(100%);}
+#S-chat.open{transform:translateX(0);}
+
+/* ── SETUP OVERLAY ───────────────────────────────────── */
+#setup-ov{position:fixed;inset:0;z-index:200;background:#fff;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  overflow-y:auto;padding:0;}
+#setup-ov.gone{display:none;}
+.setup-hero{width:100%;background:linear-gradient(160deg,var(--gdk) 0%,var(--gd) 60%,var(--g) 100%);
+  padding:52px 28px 36px;display:flex;flex-direction:column;align-items:center;gap:14px;flex-shrink:0;}
+.setup-logo{width:72px;height:72px;background:rgba(255,255,255,.18);border-radius:22px;
+  display:flex;align-items:center;justify-content:center;font-size:38px;
+  box-shadow:0 4px 20px rgba(0,0,0,.2);backdrop-filter:blur(8px);}
+.setup-title{font-size:26px;font-weight:800;color:#fff;letter-spacing:-.5px;}
+.setup-sub{font-size:14px;color:rgba(255,255,255,.75);text-align:center;line-height:1.5;}
+.setup-body{width:100%;max-width:430px;padding:28px 24px 40px;display:flex;flex-direction:column;gap:20px;}
+.setup-step{background:#fff;border-radius:16px;border:1.5px solid var(--sep);overflow:hidden;box-shadow:var(--shadow);}
+.step-hdr{padding:14px 16px;background:var(--glite);border-bottom:1px solid var(--sep);
+  display:flex;align-items:center;gap:10px;}
+.step-num{width:26px;height:26px;background:var(--gd);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;flex-shrink:0;}
+.step-ttl{font-size:14px;font-weight:700;color:var(--black);}
+.step-body{padding:16px;}
+.lbl{font-size:12px;font-weight:600;color:var(--gray);margin-bottom:6px;display:block;}
+.fi{width:100%;padding:12px 14px;border:1.5px solid var(--sep);border-radius:10px;
+  font-size:15px;outline:none;font-family:var(--font);color:var(--black);background:#fff;transition:border .15s;}
+.fi:focus{border-color:var(--gd);}
+.fi.err{border-color:var(--red);}
+.setup-hint{font-size:11px;color:var(--gray);margin-top:7px;line-height:1.6;}
+.setup-hint a{color:var(--gd);font-weight:600;text-decoration:none;}
+.gbtn{width:100%;background:#fff;border:1.5px solid var(--sep);border-radius:10px;
+  padding:12px;display:flex;align-items:center;justify-content:center;gap:10px;
+  font-size:15px;font-weight:600;color:var(--black);cursor:pointer;font-family:var(--font);
+  box-shadow:0 1px 4px rgba(0,0,0,.06);transition:all .15s;}
+.gbtn:hover{border-color:var(--gd);}
+.gbtn.connected{background:#f0fff4;border-color:var(--g);color:var(--gdk);}
+.gbtn svg{width:20px;height:20px;flex-shrink:0;}
+.main-btn{width:100%;background:var(--g);color:#fff;border:none;border-radius:12px;
+  padding:15px;font-size:17px;font-weight:700;cursor:pointer;font-family:var(--font);
+  box-shadow:0 3px 12px rgba(37,211,102,.4);transition:opacity .15s;}
+.main-btn:active{opacity:.85;}
+.skip-link{text-align:center;font-size:13px;color:var(--gray);cursor:pointer;padding:4px;}
+.skip-link span{color:var(--gd);font-weight:600;}
+
+/* ── STATUS BAR ──────────────────────────────────────── */
+.status-bar{height:44px;padding:14px 20px 0;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+.status-time{font-size:15px;font-weight:700;color:var(--black);}
+.status-icons{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--black);}
+
+/* ── LIST HEADER ─────────────────────────────────────── */
+.list-hdr{padding:4px 16px 0;flex-shrink:0;}
+.list-hdr-row{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:8px;}
+.list-title{font-size:32px;font-weight:800;color:var(--black);letter-spacing:-.5px;}
+.hdr-btns{display:flex;align-items:center;gap:2px;}
+.hbtn{background:none;border:none;cursor:pointer;color:var(--gd);font-size:22px;padding:5px;
+  display:flex;align-items:center;justify-content:center;border-radius:50%;}
+.hbtn:active{background:var(--glite);}
+
+/* Sync badge */
+.sync-row{display:flex;align-items:center;gap:8px;padding:0 16px 10px;flex-shrink:0;}
+.sync-badge{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;}
+.sync-badge.on{background:var(--gpill);color:var(--gptxt);}
+.sync-badge.off{background:#FFF3CD;color:#856404;}
+.sync-badge.err{background:#FEE2E2;color:#991B1B;}
+.sync-dot{width:6px;height:6px;border-radius:50%;}
+.on .sync-dot{background:var(--g);}
+.off .sync-dot{background:var(--amber);}
+.err .sync-dot{background:var(--red);}
+
+/* ── SEARCH ──────────────────────────────────────────── */
+.search-wrap{padding:0 16px 8px;flex-shrink:0;}
+.search-bar{background:var(--glite);border-radius:10px;display:flex;align-items:center;padding:8px 10px;gap:7px;}
+.search-inp{flex:1;background:none;border:none;outline:none;font-size:17px;color:var(--black);font-family:var(--font);}
+.search-inp::placeholder{color:var(--gray);}
+
+/* ── PILLS ───────────────────────────────────────────── */
+.pills-row{display:flex;gap:8px;padding:0 16px 10px;overflow-x:auto;scrollbar-width:none;flex-shrink:0;}
+.pills-row::-webkit-scrollbar{display:none;}
+.pill{border:none;border-radius:20px;padding:6px 14px;font-size:14px;font-family:var(--font);
+  cursor:pointer;white-space:nowrap;transition:all .15s;font-weight:500;}
+.pill.on{background:var(--gpill);color:var(--gptxt);font-weight:700;}
+.pill.off{background:var(--glite);color:#3C3C43;}
+
+/* ── CHAT LIST ───────────────────────────────────────── */
+.chat-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.sec-label{padding:5px 16px;font-size:12px;font-weight:700;color:var(--gray);
+  background:var(--white);letter-spacing:.5px;text-transform:uppercase;}
+.chat-row{display:flex;align-items:center;padding:10px 16px;gap:12px;cursor:pointer;
+  transition:background .1s;position:relative;-webkit-user-select:none;user-select:none;}
+.chat-row:active{background:var(--hover);}
+.chat-row::after{content:'';position:absolute;left:78px;right:0;bottom:0;height:.5px;background:var(--sep);}
+
+/* ── AVATARS ─────────────────────────────────────────── */
+.av{width:50px;height:50px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;overflow:hidden;font-size:20px;font-weight:700;color:#fff;}
+.av img,.av-sm img{width:100%;height:100%;object-fit:cover;}
+.av-sm{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;overflow:hidden;font-size:14px;font-weight:700;color:#fff;}
+
+/* ── CHAT ROW CONTENT ────────────────────────────────── */
+.ci{flex:1;min-width:0;}
+.crow-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;}
+.cname{font-size:16px;font-weight:700;color:var(--black);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100% - 65px);}
+.ctime{font-size:12px;color:var(--gray);flex-shrink:0;}
+.ctime.unread{color:var(--gd);font-weight:600;}
+.crow-bot{display:flex;align-items:center;gap:5px;}
+.cprev{font-size:14px;color:var(--gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;line-height:1.35;}
+.nbadge{background:var(--g);color:#fff;border-radius:12px;min-width:20px;height:20px;
+  font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px;flex-shrink:0;}
+.dbl-check{color:var(--blue);font-size:13px;flex-shrink:0;}
+
+/* ── TAB BAR ─────────────────────────────────────────── */
+.tab-bar{display:flex;justify-content:space-around;align-items:center;
+  background:rgba(255,255,255,.94);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:.5px solid var(--sep);padding:8px 0 env(safe-area-inset-bottom,10px);flex-shrink:0;}
+.tab{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;
+  padding:2px 10px;min-width:56px;position:relative;}
+.tab-icon{font-size:22px;color:var(--gray);}
+.tab-icon.active{color:var(--gd);}
+.tab-lbl{font-size:10px;color:var(--gray);font-weight:500;}
+.tab-lbl.active{color:var(--gd);font-weight:700;}
+.tab-notif{position:absolute;top:0;right:6px;background:var(--red);color:#fff;border-radius:10px;
+  min-width:16px;height:16px;font-size:10px;font-weight:700;display:flex;align-items:center;
+  justify-content:center;padding:0 3px;}
+
+/* ── CHAT SCREEN HEADER ──────────────────────────────── */
+.chat-hdr{background:var(--white);padding:8px 12px;display:flex;align-items:center;gap:6px;
+  border-bottom:.5px solid var(--sep);flex-shrink:0;min-height:56px;}
+.back-btn{background:none;border:none;cursor:pointer;color:var(--gd);font-size:16px;
+  font-family:var(--font);font-weight:600;display:flex;align-items:center;gap:0;padding:4px 4px 4px 0;flex-shrink:0;}
+.back-arrow{font-size:24px;line-height:1;}
+.chat-hdr-info{flex:1;min-width:0;cursor:pointer;}
+.chat-hdr-name{font-size:16px;font-weight:700;color:var(--black);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chat-hdr-status{font-size:12px;color:var(--gray);}
+.chat-hdr-acts{display:flex;gap:0;}
+.chat-act{background:none;border:none;cursor:pointer;color:var(--gd);font-size:22px;padding:5px;}
+
+/* ── MESSAGES ────────────────────────────────────────── */
+.msgs-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 10px;
+  display:flex;flex-direction:column;gap:4px;background:var(--bg-msg);}
+.typing-bar{min-height:16px;padding:2px 14px;font-size:11px;color:#54656f;flex-shrink:0;
+  font-style:italic;background:var(--bg-msg);}
+
+/* ── INPUT BAR ───────────────────────────────────────── */
+.inp-bar{background:var(--glite);padding:8px 10px;display:flex;align-items:center;
+  gap:8px;flex-shrink:0;border-top:.5px solid var(--sep);}
+.inp-field{flex:1;background:var(--white);border-radius:22px;border:none;outline:none;
+  padding:10px 16px;font-size:15px;color:var(--black);font-family:var(--font);
+  box-shadow:0 1px 2px rgba(0,0,0,.06);}
+.inp-field::placeholder{color:var(--gray);}
+.send-btn{background:var(--g);border:none;cursor:pointer;width:40px;height:40px;
+  border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;
+  font-size:17px;flex-shrink:0;box-shadow:0 2px 8px rgba(37,211,102,.4);}
+.icon-btn{background:none;border:none;cursor:pointer;font-size:22px;color:var(--gray);padding:4px;}
+.icon-btn.active{color:var(--red);}
+
+/* ── BUBBLES ─────────────────────────────────────────── */
+.bbl{max-width:82%;padding:8px 11px 4px;border-radius:8px;font-size:15px;line-height:1.55;word-wrap:break-word;}
+.me{background:#DCF8C6;color:#111;border-radius:8px 0 8px 8px;align-self:flex-end;}
+.rx{background:var(--white);color:#111;border-radius:0 8px 8px 8px;align-self:flex-start;box-shadow:0 1px 2px rgba(0,0,0,.07);}
+.tm{font-size:11px;color:#8696a0;display:block;text-align:right;margin-top:3px;}
+
+/* ── CHIPS ───────────────────────────────────────────── */
+.chip{background:var(--white);border:1.5px solid var(--gd);color:var(--gdk);
+  border-radius:16px;padding:7px 14px;font-size:13px;cursor:pointer;white-space:nowrap;
+  font-family:var(--font);font-weight:600;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.07);}
+.chip:active{background:var(--gdk);color:#fff;}
+
+/* ── DATA CARDS ──────────────────────────────────────── */
+.xcard,.pcard,.acard,.bcard{background:var(--white);border-radius:10px;border:1px solid var(--sep);
+  overflow:hidden;max-width:292px;font-size:12px;box-shadow:var(--shadow);}
+.ccard{background:var(--white);border-radius:10px;padding:11px;max-width:292px;
+  border:1px solid var(--sep);box-shadow:var(--shadow);}
+.tcard{background:var(--white);border-radius:10px;overflow:hidden;border:1px solid var(--sep);
+  max-width:292px;font-size:12px;box-shadow:var(--shadow);}
+.dcard{background:linear-gradient(135deg,#1e3a5f,#0d47a1);border-radius:10px;padding:10px 12px;
+  max-width:285px;font-size:12px;color:#fff;box-shadow:0 2px 8px rgba(13,71,161,.3);}
+.xrow td{padding:5px 10px;border-bottom:1px solid #f5f5f5;font-size:12px;vertical-align:top;}
+.xrow td:first-child{color:#888;width:43%;}
+.badge-pill{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600;}
+.esc-row{display:flex;justify-content:space-between;align-items:center;padding:5px 10px;border-bottom:1px solid #f5f5f5;}
+
+/* ── UPLOAD PROGRESS ─────────────────────────────────── */
+.upload-card{background:var(--white);border-radius:10px;border:1.5px solid var(--gd);
+  padding:12px;max-width:260px;align-self:flex-start;box-shadow:0 2px 8px rgba(37,211,102,.15);}
+.progress-bar-wrap{background:#e5e5e5;border-radius:4px;height:5px;overflow:hidden;margin-top:8px;}
+.progress-bar{background:var(--g);height:100%;border-radius:4px;transition:width .4s;}
+
+/* ── MODAL BOTTOM SHEET ──────────────────────────────── */
+.modal-ov{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:50;
+  display:none;align-items:flex-end;justify-content:center;}
+.modal-ov.show{display:flex;}
+.modal-sheet{background:var(--white);border-radius:18px 18px 0 0;width:100%;
+  max-height:82%;overflow-y:auto;padding:0 0 env(safe-area-inset-bottom,16px);}
+.sh-handle{width:36px;height:4px;background:#D1D1D6;border-radius:2px;margin:10px auto 4px;}
+.sh-hdr{padding:12px 16px;border-bottom:.5px solid var(--sep);display:flex;justify-content:space-between;align-items:center;}
+.sh-title{font-size:16px;font-weight:700;color:var(--black);}
+.sh-close{background:none;border:none;cursor:pointer;font-size:22px;color:var(--gray);}
+.mi-inp{width:100%;padding:12px 14px;border:1.5px solid var(--sep);border-radius:10px;
+  font-size:15px;outline:none;font-family:var(--font);background:var(--white);color:var(--black);transition:border .15s;}
+.mi-inp:focus{border-color:var(--gd);}
+
+/* ── WP & COLOR GRID ─────────────────────────────────── */
+.wp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.wp-item{cursor:pointer;text-align:center;}
+.wp-swatch{width:100%;aspect-ratio:1;border-radius:10px;border:2.5px solid transparent;transition:all .15s;}
+.wp-swatch.sel,.wp-swatch:active{border-color:var(--gd);transform:scale(1.05);}
+.wp-lbl{font-size:9px;color:var(--gray);margin-top:3px;}
+.av-color{width:32px;height:32px;border-radius:50%;cursor:pointer;border:2.5px solid transparent;transition:border .12s;}
+.av-color.sel,.av-color:active{border-color:var(--gdk);}
+
+/* ── TOAST ───────────────────────────────────────────── */
+#toast{position:absolute;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:rgba(0,0,0,.82);color:#fff;padding:10px 18px;border-radius:20px;
+  font-size:13px;font-weight:500;white-space:nowrap;z-index:100;
+  opacity:0;transition:all .25s;pointer-events:none;max-width:90%;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── ANIMATIONS ──────────────────────────────────────── */
+@keyframes cashRing{0%{transform:scale(1);}30%{transform:scale(1.04);}60%{transform:scale(.98);}100%{transform:scale(1);}}
+.caja-flash{animation:cashRing .4s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.fade-in{animation:fadeIn .25s ease forwards;}
+::-webkit-scrollbar{width:2px;}
+::-webkit-scrollbar-thumb{background:#D1D1D6;border-radius:2px;}
+
+/* ── CAMERA CAPTURE BUTTON ───────────────────────────── */
+.attach-menu{position:absolute;bottom:68px;left:10px;background:var(--white);
+  border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.15);padding:8px;
+  display:none;flex-direction:column;gap:2px;z-index:10;min-width:180px;}
+.attach-menu.show{display:flex;}
+.attach-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;
+  cursor:pointer;font-size:14px;font-weight:500;color:var(--black);transition:background .1s;}
+.attach-item:hover{background:var(--glite);}
+.attach-item span:first-child{font-size:20px;width:28px;text-align:center;}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════
+     SETUP WIZARD
+════════════════════════════════════════════════════ -->
+<div id="setup-ov">
+  <div class="setup-hero">
+    <div class="setup-logo">🤖</div>
+    <div class="setup-title">EmpresaHub Pro</div>
+    <div class="setup-sub">Tu empresa inteligente en el celular.<br>Conecta tus herramientas para empezar.</div>
+  </div>
+  <div class="setup-body">
+
+    <!-- STEP 1: Anthropic API -->
+    <div class="setup-step">
+      <div class="step-hdr">
+        <div class="step-num">1</div>
+        <div class="step-ttl">API Key de Anthropic (IA)</div>
+      </div>
+      <div class="step-body">
+        <label class="lbl">Tu API Key</label>
+        <input id="s-anthropic" class="fi" type="password" placeholder="sk-ant-api03-…"
+          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <div class="setup-hint">
+          Obtén tu clave en <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>
+          Se guarda <b>solo en tu dispositivo</b>.
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: Google Client ID -->
+    <div class="setup-step">
+      <div class="step-hdr">
+        <div class="step-num">2</div>
+        <div class="step-ttl">Google Client ID (Drive + Sheets)</div>
+      </div>
+      <div class="step-body">
+        <label class="lbl">Client ID de Google Cloud</label>
+        <input id="s-gid" class="fi" type="text" placeholder="12345…apps.googleusercontent.com"
+          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <div class="setup-hint">
+          1. Ve a <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a><br>
+          2. Crea proyecto → Habilita <b>Drive API</b> y <b>Sheets API</b><br>
+          3. Credenciales → OAuth 2.0 → Tipo: <b>Aplicación web</b><br>
+          4. <b>Orígenes de JS autorizados</b>: agrega la URL de esta página<br>
+          &nbsp;&nbsp;&nbsp;(ej: <em>http://localhost</em> o tu dominio)<br>
+          ⚠️ <b>Si ves Error 400</b>: solo necesitas <em>Orígenes JS</em>, no URIs de redirección.
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: Connect Google -->
+    <div class="setup-step">
+      <div class="step-hdr">
+        <div class="step-num">3</div>
+        <div class="step-ttl">Conectar con Google</div>
+      </div>
+      <div class="step-body">
+        <button class="gbtn" id="s-gbtn" onclick="setupConnectGoogle()">
+          <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Conectar con Google
+        </button>
+        <div class="setup-hint" style="margin-top:8px;">Necesario para guardar facturas en Drive y el Libro Fiscal en Sheets.</div>
+      </div>
+    </div>
+
+    <button class="main-btn" onclick="setupFinish()">Entrar a EmpresaHub ➤</button>
+    <div class="skip-link" onclick="setupSkipGoogle()">Continuar <span>sin Google</span> (solo IA)</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     MAIN APP
+════════════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- ── SCREEN 1: CHAT LIST ── -->
+  <div id="S-list" class="screen">
+    <div class="status-bar">
+      <span class="status-time" id="clock">9:41</span>
+      <div class="status-icons"><span>●●●</span><span style="font-size:11px;">WiFi</span><span>🔋</span></div>
+    </div>
+    <div class="list-hdr">
+      <div class="list-hdr-row">
+        <span class="list-title">Chats</span>
+        <div class="hdr-btns">
+          <button class="hbtn" onclick="openSheet('settings')" title="Config">⚙️</button>
+          <button class="hbtn" title="Nuevo">✏️</button>
+        </div>
+      </div>
+    </div>
+    <div class="sync-row">
+      <div class="sync-badge off" id="sync-badge" onclick="openSheet('sync')">
+        <div class="sync-dot"></div>
+        <span id="sync-txt">Sin sincronizar</span>
+      </div>
+      <div class="sync-badge on" id="ai-badge" style="display:none;">
+        <div class="sync-dot"></div>
+        <span>IA activa</span>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <div class="search-bar">
+        <span style="color:var(--gray);font-size:15px;">🔍</span>
+        <input class="search-inp" type="search" placeholder="Buscar" id="search-inp"
+          oninput="filterChats(this.value)" autocomplete="off">
+      </div>
+    </div>
+    <div class="pills-row">
+      <button class="pill on" id="pill-all" onclick="setPill('all')">Todos</button>
+      <button class="pill off" id="pill-ai" onclick="setPill('ai')">IA Agentes</button>
+      <button class="pill off" id="pill-workers" onclick="setPill('workers')">Equipo</button>
+      <button class="pill off" id="pill-unread" onclick="setPill('unread')">No leídos</button>
+    </div>
+    <div class="chat-list" id="chat-list"></div>
+    <div class="tab-bar">
+      <div class="tab"><div class="tab-icon">⭐</div><div class="tab-lbl">Favoritos</div></div>
+      <div class="tab"><div class="tab-icon">🕐</div><div class="tab-lbl">Recientes</div></div>
+      <div class="tab">
+        <div class="tab-icon active" style="position:relative;">💬<span class="tab-notif" id="tab-notif">3</span></div>
+        <div class="tab-lbl active">Chats</div>
+      </div>
+      <div class="tab"><div class="tab-icon">📞</div><div class="tab-lbl">Llamadas</div></div>
+      <div class="tab" onclick="openSheet('settings')"><div class="tab-icon">⚙️</div><div class="tab-lbl">Config.</div></div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN 2: CHAT ── -->
+  <div id="S-chat" class="screen">
+    <div class="chat-hdr">
+      <button class="back-btn" onclick="goBack()">
+        <span class="back-arrow">‹</span>
+      </button>
+      <div id="chat-hdr-av" onclick="openSheet('photo')" style="cursor:pointer;"></div>
+      <div class="chat-hdr-info" onclick="openSheet('name')">
+        <div class="chat-hdr-name" id="chat-hdr-name"></div>
+        <div class="chat-hdr-status" id="chat-hdr-status"></div>
+      </div>
+      <div class="chat-hdr-acts">
+        <button class="chat-act" onclick="openSheet('wallpaper')" title="Fondo">🎨</button>
+        <button class="chat-act" onclick="openSheet('libro')" title="Libro Fiscal">📊</button>
+        <button class="chat-act" id="sheets-btn" onclick="openSheetsLink()" title="Ver en Sheets" style="display:none;">📋</button>
+      </div>
+    </div>
+    <div id="msgs" class="msgs-area"></div>
+    <div id="typing-bar" class="typing-bar"></div>
+    <!-- Attach menu -->
+    <div class="attach-menu" id="attach-menu">
+      <div class="attach-item" onclick="triggerFile('image/*')">
+        <span>🖼️</span><span>Galería / Foto</span>
+      </div>
+      <div class="attach-item" onclick="triggerCamera()">
+        <span>📷</span><span>Cámara</span>
+      </div>
+      <div class="attach-item" onclick="triggerFile('application/pdf,image/*')">
+        <span>📄</span><span>PDF / Factura</span>
+      </div>
+    </div>
+    <!-- Hidden file inputs -->
+    <input id="fi-gallery" type="file" accept="image/*,.pdf" style="display:none;" onchange="onFile(event,'gallery')">
+    <input id="fi-camera" type="file" accept="image/*" capture="environment" style="display:none;" onchange="onFile(event,'camera')">
+    <div class="inp-bar">
+      <button class="icon-btn" id="attach-btn" onclick="toggleAttachMenu()" title="Adjuntar">📎</button>
+      <input id="inp" class="inp-field" type="text" placeholder="Mensaje"
+        onkeydown="if(event.key==='Enter')send()" autocomplete="off" autocorrect="off">
+      <button class="icon-btn" id="micbtn" onclick="togMic()" title="Voz">🎤</button>
+      <button onclick="send()" class="send-btn">➤</button>
+    </div>
+  </div>
+
+  <!-- ── BOTTOM SHEET MODAL ── -->
+  <div class="modal-ov" id="modal-ov" onclick="if(event.target===this)closeSheet()">
+    <div class="modal-sheet" id="modal-sheet" onclick="event.stopPropagation()">
+      <div class="sh-handle"></div>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- ── TOAST ── -->
+  <div id="toast"></div>
+</div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CONFIG & PERSISTENCE
+// ═══════════════════════════════════════════════════════════════════════════════
+const CFG_KEY = 'ehub_v4_cfg';
+const DATA_KEY = 'ehub_v4_data';
+let CFG = { anthropicKey:'', googleClientId:'', spreadsheetId:'', driveFolderId:'', googleConnected:false };
+function loadCFG(){ try{ Object.assign(CFG, JSON.parse(localStorage.getItem(CFG_KEY)||'{}')); }catch(e){} }
+function saveCFG(){ localStorage.setItem(CFG_KEY, JSON.stringify(CFG)); }
+loadCFG();
+
+function saveData(){
+  try{
+    const chats={};
+    Object.keys(C).forEach(id=>{ chats[id]={msgs:C[id].msgs, hist:C[id].hist}; });
+    localStorage.setItem(DATA_KEY, JSON.stringify({libroFiscal,activos,inversiones,gastadoMes,presupuestoMensual,chats}));
+  }catch(e){}
+}
+function loadData(){
+  try{
+    const d=JSON.parse(localStorage.getItem(DATA_KEY)||'{}');
+    if(d.libroFiscal) libroFiscal=d.libroFiscal;
+    if(d.activos) activos=d.activos;
+    if(d.inversiones) inversiones=d.inversiones;
+    if(typeof d.gastadoMes==='number') gastadoMes=d.gastadoMes;
+    if(typeof d.presupuestoMensual==='number') presupuestoMensual=d.presupuestoMensual;
+    if(d.chats) Object.keys(d.chats).forEach(id=>{
+      if(C[id]){ C[id].msgs=d.chats[id].msgs||C[id].msgs; C[id].hist=d.chats[id].hist||C[id].hist; }
+    });
+  }catch(e){}
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════════════════════════
+let toastTimer;
+function showToast(msg, dur=3000){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'), dur);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SETUP WIZARD
+// ═══════════════════════════════════════════════════════════════════════════════
+let gConnected = false;
+
+function setupConnectGoogle(){
+  const gid = document.getElementById('s-gid').value.trim();
+  if(!gid){ document.getElementById('s-gid').classList.add('err'); showToast('Ingresa tu Google Client ID primero'); return; }
+  CFG.googleClientId = gid; saveCFG();
+  initGoogleAuth();
+  signInGoogle();
+}
+
+function onGoogleReady(){
+  gConnected = true;
+  CFG.googleConnected = true; saveCFG();
+  const btn = document.getElementById('s-gbtn');
+  if(btn){ btn.classList.add('connected'); btn.innerHTML='<span style="font-size:18px;">✅</span> Google conectado'; }
+  updateSyncBadge();
+}
+
+function setupFinish(){
+  const ak = document.getElementById('s-anthropic').value.trim();
+  const gid = document.getElementById('s-gid').value.trim();
+  if(!ak){ document.getElementById('s-anthropic').classList.add('err'); showToast('Ingresa tu API Key de Anthropic'); return; }
+  if(!ak.startsWith('sk-ant-')){ document.getElementById('s-anthropic').classList.add('err'); showToast('La API Key debe empezar con sk-ant-'); return; }
+  CFG.anthropicKey = ak;
+  if(gid) CFG.googleClientId = gid;
+  saveCFG();
+  document.getElementById('setup-ov').classList.add('gone');
+  document.getElementById('ai-badge').style.display='flex';
+  if(gid && !gConnected){ initGoogleAuth(); }
+  renderList('','all');
+}
+
+function setupSkipGoogle(){
+  const ak = document.getElementById('s-anthropic').value.trim();
+  if(!ak.startsWith('sk-ant-')){ document.getElementById('s-anthropic').classList.add('err'); showToast('Necesitas al menos la API Key de Anthropic'); return; }
+  CFG.anthropicKey = ak; saveCFG();
+  document.getElementById('setup-ov').classList.add('gone');
+  document.getElementById('ai-badge').style.display='flex';
+  renderList('','all');
+}
+
+function checkSetup(){
+  if(!CFG.anthropicKey){ document.getElementById('setup-ov').classList.remove('gone'); return false; }
+  document.getElementById('setup-ov').classList.add('gone');
+  document.getElementById('ai-badge').style.display='flex';
+  if(CFG.googleClientId) initGoogleAuth();
+  return true;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// GOOGLE OAUTH (GIS Token Model)
+// ═══════════════════════════════════════════════════════════════════════════════
+const GSCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets';
+let tokenClient = null;
+let gToken = null;
+let gTokenExpiry = 0;
+
+function initGoogleAuth(){
+  if(!CFG.googleClientId || typeof google === 'undefined') return;
+  try{
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CFG.googleClientId,
+      scope: GSCOPES,
+      callback: onGoogleToken,
+    });
+  }catch(e){ console.warn('GIS init error:', e); }
+}
+
+function onGoogleToken(resp){
+  if(resp.error){
+    let msg='Error Google: '+resp.error;
+    if(resp.error==='redirect_uri_mismatch'||resp.error_subtype==='redirect_uri_mismatch'){
+      msg='❌ Error 400 de Google: Ve a Google Cloud Console → Credenciales → tu OAuth Client ID → "Orígenes de JavaScript autorizados" → agrega la URL de esta página (ej: http://localhost o tu dominio).';
+    }
+    showToast(msg, 7000);
+    const b=document.getElementById('s-gbtn');
+    if(b){ b.innerHTML=`<span style="font-size:16px;">⚠️</span> Error — revisa la consola`; b.style.borderColor='#ed4245'; }
+    console.error('Google OAuth error:', resp);
+    return;
+  }
+  gToken = resp.access_token;
+  gTokenExpiry = Date.now() + (resp.expires_in*1000) - 30000;
+  onGoogleReady();
+}
+
+function signInGoogle(){
+  if(!tokenClient){ setTimeout(()=>{ initGoogleAuth(); if(tokenClient) tokenClient.requestAccessToken({prompt:'consent'}); }, 2000); return; }
+  tokenClient.requestAccessToken({prompt:'consent'});
+}
+
+async function ensureGToken(){
+  if(gToken && Date.now() < gTokenExpiry) return true;
+  if(!tokenClient) return false;
+  return new Promise(resolve=>{
+    tokenClient.callback = resp=>{
+      if(resp.error){ resolve(false); return; }
+      gToken = resp.access_token;
+      gTokenExpiry = Date.now() + (resp.expires_in*1000) - 30000;
+      resolve(true);
+    };
+    tokenClient.requestAccessToken({prompt:''});
+  });
+}
+
+function updateSyncBadge(){
+  const b = document.getElementById('sync-badge');
+  const t = document.getElementById('sync-txt');
+  if(gConnected){ b.className='sync-badge on'; t.textContent='Drive + Sheets'; }
+  else{ b.className='sync-badge off'; t.textContent='Sin sincronizar'; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// GOOGLE DRIVE API
+// ═══════════════════════════════════════════════════════════════════════════════
+async function driveReq(path, method='GET', body=null, ctype='application/json'){
+  if(!await ensureGToken()) throw new Error('Sin token Google');
+  const opts = { method, headers:{'Authorization':'Bearer '+gToken} };
+  if(body){ opts.headers['Content-Type']=ctype; opts.body=body; }
+  const r = await fetch('https://www.googleapis.com/drive/v3/'+path, opts);
+  return r.json();
+}
+
+async function driveMkFolder(name, parentId=null){
+  // Find existing
+  let q = `name='${name.replace(/'/g,"\\'")}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+  if(parentId) q += ` and '${parentId}' in parents`;
+  const search = await driveReq(`files?q=${encodeURIComponent(q)}&fields=files(id,name)&pageSize=1`);
+  if(search.files && search.files.length) return search.files[0].id;
+  // Create
+  const meta = {name, mimeType:'application/vnd.google-apps.folder'};
+  if(parentId) meta.parents=[parentId];
+  const created = await driveReq('files?fields=id', 'POST', JSON.stringify(meta));
+  return created.id;
+}
+
+async function driveGetStructure(year, month, category){
+  if(!CFG.driveFolderId){
+    CFG.driveFolderId = await driveMkFolder('EmpresaHub Pro');
+    saveCFG();
+  }
+  const yId = await driveMkFolder(year, CFG.driveFolderId);
+  const mId = await driveMkFolder(month, yId);
+  const cId = await driveMkFolder(category, mId);
+  return cId;
+}
+
+async function driveUpload(b64data, mimeType, fileName, folderId){
+  if(!await ensureGToken()) throw new Error('Sin token Google');
+  // Convert base64 to Blob
+  const binary = atob(b64data);
+  const buf = new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++) buf[i]=binary.charCodeAt(i);
+  const blob = new Blob([buf], {type:mimeType});
+
+  const meta = {name:fileName, parents:[folderId]};
+  const form = new FormData();
+  form.append('metadata', new Blob([JSON.stringify(meta)], {type:'application/json'}));
+  form.append('file', blob);
+
+  const r = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink,name', {
+    method:'POST', headers:{'Authorization':'Bearer '+gToken}, body:form
+  });
+  return r.json();
+}
+
+async function driveSetPublic(fileId){
+  await driveReq(`files/${fileId}/permissions`, 'POST', JSON.stringify({role:'reader',type:'anyone'}));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// GOOGLE SHEETS API
+// ═══════════════════════════════════════════════════════════════════════════════
+async function sheetsReq(path, method='GET', body=null){
+  if(!await ensureGToken()) throw new Error('Sin token Google');
+  const opts = { method, headers:{'Authorization':'Bearer '+gToken} };
+  if(body){ opts.headers['Content-Type']='application/json'; opts.body=JSON.stringify(body); }
+  const r = await fetch('https://sheets.googleapis.com/v4/spreadsheets/'+path, opts);
+  return r.json();
+}
+
+async function sheetsGetOrCreate(){
+  if(CFG.spreadsheetId){
+    try{
+      const test = await sheetsReq(CFG.spreadsheetId+'?fields=spreadsheetId');
+      if(test.spreadsheetId) return CFG.spreadsheetId;
+    }catch(e){ CFG.spreadsheetId=''; }
+  }
+  // Create new
+  const r = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
+    method:'POST',
+    headers:{'Authorization':'Bearer '+gToken,'Content-Type':'application/json'},
+    body: JSON.stringify({
+      properties:{title:`EmpresaHub - Libro Fiscal ${new Date().getFullYear()}`},
+      sheets:[
+        {properties:{title:'Libro Fiscal',sheetId:0}},
+        {properties:{title:'Activos',sheetId:1}},
+        {properties:{title:'Inversiones',sheetId:2}},
+        {properties:{title:'Presupuesto',sheetId:3}},
+      ]
+    })
+  });
+  const data = await r.json();
+  CFG.spreadsheetId = data.spreadsheetId;
+  saveCFG();
+  // Add headers
+  const hdrs = {
+    'Libro Fiscal':['Fecha','UUID','Tipo','Categoría','Subcategoría','RFC Emisor','Proveedor','Concepto','Subtotal','IVA','Retenciones','Total MXN','Link Drive','Estatus Pago','Deducibilidad','Artículo LISR','Registrado'],
+    'Activos':['Activo','Fecha Compra','Valor Original','Tasa Dep. %','Dep. Mensual','Valor Actual','Vida Útil Restante','Fecha Registro'],
+    'Inversiones':['Proyecto','Inversión Inicial','VPN','TIR %','Payback (meses)','Riesgo','Recomendación','Justificación','Fecha'],
+    'Presupuesto':['Mes','Presupuesto Total','Gastado','Restante','Variación %','Top Categoría'],
+  };
+  for(const [sheet,cols] of Object.entries(hdrs)){
+    await sheetsAppend(sheet,[cols]);
+  }
+  return CFG.spreadsheetId;
+}
+
+async function sheetsAppend(sheetName, rows){
+  const sid = await sheetsGetOrCreate();
+  const range = encodeURIComponent(`${sheetName}!A:A`);
+  return sheetsReq(`${sid}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`, 'POST', {values:rows});
+}
+
+function openSheetsLink(){
+  if(!CFG.spreadsheetId){ showToast('No hay Libro Fiscal creado todavía'); return; }
+  window.open(`https://docs.google.com/spreadsheets/d/${CFG.spreadsheetId}`, '_blank');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ANTHROPIC API
+// ═══════════════════════════════════════════════════════════════════════════════
+async function aiCall(messages, systemPrompt, maxTokens=1200){
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key': CFG.anthropicKey,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true',
+    },
+    body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:maxTokens, system:systemPrompt, messages })
+  });
+  const data = await r.json();
+  if(data.error) throw new Error(data.error.message||'API error');
+  return data.content?.[0]?.text || '';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// AUDIO ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+let aCtx;
+function getACtx(){ if(!aCtx) aCtx=new(window.AudioContext||window.webkitAudioContext)(); return aCtx; }
+function tone(f,d,v=.1){ try{ const C=getACtx(),o=C.createOscillator(),g=C.createGain(); o.connect(g); g.connect(C.destination); o.frequency.value=f; g.gain.setValueAtTime(v,C.currentTime); g.gain.exponentialRampToValueAtTime(.001,C.currentTime+d); o.start(); o.stop(C.currentTime+d); }catch(e){} }
+function sfxS(){ tone(880,.1); setTimeout(()=>tone(1100,.09),65); }
+function sfxR(){ tone(600,.09); setTimeout(()=>tone(800,.11),55); }
+function sfxCaja(){ tone(1320,.05,.12); setTimeout(()=>tone(1760,.04,.1),55); setTimeout(()=>tone(2093,.06,.12),100); setTimeout(()=>tone(880,.08,.08),160); setTimeout(()=>tone(1100,.05,.06),200); setTimeout(()=>tone(1480,.12,.15),250); const a=document.getElementById('app'); a.classList.add('caja-flash'); setTimeout(()=>a.classList.remove('caja-flash'),400); }
+function sfxDrive(){ tone(600,.06); setTimeout(()=>tone(900,.06),80); setTimeout(()=>tone(1200,.1),155); }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// WALLPAPERS & COLORS
+// ═══════════════════════════════════════════════════════════════════════════════
+const WP=[
+  {id:'a',lbl:'WhatsApp',bg:'#e5ddd5'},{id:'b',lbl:'Noche',bg:'#1a2332'},
+  {id:'c',lbl:'Cielo',bg:'#dbeafe'},{id:'d',lbl:'Lavanda',bg:'#ede9fe'},
+  {id:'e',lbl:'Menta',bg:'#d1fae5'},{id:'f',lbl:'Rosa',bg:'#fce7f3'},
+  {id:'g',lbl:'Dunas',bg:'#fef3c7'},{id:'h',lbl:'Pizarra',bg:'#f0f4f8'},
+];
+const AVC=['#128c7e','#3ba55c','#0088cc','#f0b132','#ed4245','#a855f7','#ff6b35','#e91e63'];
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// FINANCIAL STATE
+// ═══════════════════════════════════════════════════════════════════════════════
+let libroFiscal=[], activos=[], inversiones=[];
+let presupuestoMensual=15000, gastadoMes=2500;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// AI SYSTEM PROMPTS
+// ═══════════════════════════════════════════════════════════════════════════════
+const PROMPTS = {
+contadores:`Eres el **Contador Maestro** de EmpresaHub Pro — consultor financiero senior, doctorado en finanzas y fiscalidad mexicana. Serio, eficiente, ultra-preciso y cercano.
+Dominas: NIF, IFRS, SAT, CFDI 4.0, IVA 16%, ISR, IEPS, LISR completa, todos los regímenes fiscales México 2025-2026.
+
+═══ MÓDULO A — OCR FISCAL (imagen/PDF) ═══
+Al recibir imagen de factura, ticket o CFDI:
+1. Extrae TODOS los campos. Si alguno no es legible, infórmalo.
+2. Analiza deducibilidad exacta + artículo LISR aplicable.
+   - Alimentos clientes: 8.5% Art.28 Fr.XX | Gasolina: 100% Art.28 Fr.II | Viáticos: 100% Art.28 Fr.V
+   - Hospedaje: 100% Art.28 Fr.V | Cómputo: 100% Art.31 Fr.I | Uniformes: 100% Art.31 Fr.XII
+3. SIEMPRE incluye estos dos bloques XML:
+
+<excel_fiscal>{"fecha":"","uuid":"","tipo":"Egreso","categoria":"Gasto","subcategoria":"","rfc_emisor":"","proveedor":"","subtotal":0,"iva":0,"retenciones":0,"total":0,"link_drive":"pendiente","estatus_pago":"Pagado","deducibilidad":"100%","articulo_lisr":"","concepto":""}</excel_fiscal>
+
+<drive_path>{"año":"${new Date().getFullYear()}","mes":"${(new Date().getMonth()+1).toString().padStart(2,'0')}_${['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][new Date().getMonth()]}","carpeta":"Facturas_Recibidas","archivo":"${new Date().toISOString().slice(0,10)}_EGRESO_Proveedor.jpg","ruta_completa":"EmpresaHub Pro/${new Date().getFullYear()}/mes/Facturas_Recibidas/archivo.jpg"}</drive_path>
+
+═══ MÓDULO B — ANÁLISIS DE INVERSIÓN ═══
+Para cualquier inversión: VPN al 12% anual, TIR, payback, 3 escenarios (Opt +20%, Base, Pes -20%).
+<presupuesto>{"proyecto":"","inversion_inicial":0,"van":0,"tir_pct":0,"payback_meses":0,"riesgo":"Medio","escenario_base":0,"escenario_opt":0,"escenario_pes":0,"recomendacion":"VIABLE","justificacion":""}</presupuesto>
+
+═══ MÓDULO C — ACTIVOS SAT ═══
+<activo>{"activo":"","fecha_compra":"","valor_original":0,"tasa_depreciacion_anual":25,"depreciacion_mensual":0,"valor_actual":0,"vida_util_restante_meses":0}</activo>
+
+═══ MÓDULO D — PRESUPUESTO ═══
+<presupuesto_status>{"presupuesto_mensual":15000,"gastado_mes":2500,"restante":12500,"variacion_vs_mes_anterior_pct":0,"top_categoria_gasto":""}</presupuesto_status>
+
+═══ VISUALIZACIONES ═══
+Gráficas de barras: <chart>{"type":"bar","title":"","labels":[],"datasets":[{"label":"","data":[],"color":"#25D366"}]}</chart>
+Gráficas de pastel: <chart>{"type":"pie","title":"","labels":[],"data":[],"colors":[]}</chart>
+Tablas: <tabla>{"title":"","cols":[],"rows":[[]]}</tabla>
+
+Responde en español mexicano, profesional y cercano. Cita el artículo LISR siempre. Para audios/voz: respuesta breve primero, luego reportes.
+
+═══ MÓDULO E — COMANDOS LIBRO FISCAL ═══
+Si el usuario pide ELIMINAR un registro del Libro Diario Fiscal, usa:
+<libro_cmd>{"action":"delete","indice":-1}</libro_cmd>   (-1 = último, 0 = primero, etc.)
+Si pide EDITAR un campo de un registro:
+<libro_cmd>{"action":"edit","indice":-1,"campo":"total","valor":1234.56}</libro_cmd>
+Campos editables: fecha, proveedor, concepto, subtotal, iva, retenciones, total, categoria, estatus_pago, deducibilidad, articulo_lisr, uuid.
+Si el usuario menciona un proveedor o UUID específico para identificar el registro, ponlo en "buscar_proveedor" o "buscar_uuid" en lugar de "indice".
+SIEMPRE confirma con un resumen de qué se cambió o eliminó.`,
+
+asistente:`Eres el Asistente Ejecutivo IA de EmpresaHub Pro. Administras agenda, inventario, nóminas y tareas del equipo.
+Inventario actual: Camisas:47u ($280c/u), Pantalones:23u ($420c/u), Zapatos:15u ($890c/u), Accesorios:8u ($150c/u).
+Equipo: María García (Ventas, activa), Carlos López (Logística, pendiente pedido #4521), Ana Martínez (Admin, permiso médico).
+Genera tablas: <tabla>{"title":"","cols":[],"rows":[[]]}</tabla>
+Responde en español mexicano, claro y eficiente. Usa emojis moderadamente.`,
+
+publicidad:`Eres el Agente de Marketing IA de EmpresaHub Pro. Experto en campañas digitales, redes sociales, copywriting, métricas (CTR/CPM/ROAS), SEO y e-commerce.
+Gráficas de métricas: <chart>{"type":"bar","title":"","labels":[],"datasets":[{"label":"","data":[],"color":"#ff6b35"}]}</chart>
+Tablas comparativas: <tabla>{"title":"","cols":[],"rows":[[]]}</tabla>
+Genera contenido creativo y estrategias de alto impacto. Responde en español mexicano.`
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CONTACTS & MESSAGES DATA
+// ═══════════════════════════════════════════════════════════════════════════════
+const C = {
+  contadores:{defName:'Contador Maestro',type:'ai',pk:'contadores',emoji:'🤖',defBg:'#128c7e',
+    defSt:'IA activa · CFDI 4.0 · LISR · VPN/TIR',wp:'#e5ddd5',cn:null,cs:null,photo:null,avBg:null,unread:1,
+    msgs:[{t:'ai',text:'¡Hola! Soy tu **Contador Maestro** 🤖\n\nDoctorado en fiscalidad mexicana. Proceso facturas con análisis **LISR completa**, guardo en **Google Drive** organizado y registro en tu **Libro Fiscal de Sheets** automáticamente.\n\nAdjunta una foto de ticket, factura o CFDI para empezar.',tm:'9:00'}],hist:[]},
+
+  asistente:{defName:'Asistente IA',type:'ai',pk:'asistente',emoji:'📋',defBg:'#0088cc',
+    defSt:'IA activa · agenda y operaciones',wp:'#e5ddd5',cn:null,cs:null,photo:null,avBg:null,unread:0,
+    msgs:[{t:'ai',text:'Hola, soy tu Asistente Ejecutivo 📋\n\nAdministro agenda, inventario, nóminas y tareas.\nHabla en lenguaje natural: "¿Cuántas camisas tenemos?" o "¿Qué hay esta semana en agenda?"',tm:'9:05'}],hist:[]},
+
+  publicidad:{defName:'Publicidad IA',type:'ai',pk:'publicidad',emoji:'📢',defBg:'#ff6b35',
+    defSt:'IA activa · campañas y contenido',wp:'#e5ddd5',cn:null,cs:null,photo:null,avBg:null,unread:0,
+    msgs:[{t:'ai',text:'Soy tu Agente de Marketing 📢\n\nCampañas, métricas, contenido para redes y estrategia digital.\n¿En qué te ayudo hoy?',tm:'9:10'}],hist:[]},
+
+  maria:{defName:'María García',type:'worker',emoji:null,ini:'MG',defBg:'#3ba55c',
+    defSt:'En línea',wp:'#e5ddd5',cn:null,cs:null,photo:null,avBg:null,unread:0,
+    msgs:[{t:'ai',text:'Buenos días! Terminé el reporte de ventas 📊',tm:'8:45'},{t:'me',text:'Gracias María, lo reviso.',tm:'8:50'},{t:'ai',text:'Perfecto. Cualquier duda me avisa 😊',tm:'8:51'}],hist:[]},
+
+  carlos:{defName:'Carlos López',type:'worker',emoji:null,ini:'CL',defBg:'#f0b132',
+    defSt:'Ausente',wp:'#e5ddd5',cn:null,cs:null,photo:null,avBg:null,unread:1,
+    msgs:[{t:'ai',text:'Jefe, tengo una duda sobre el pedido #4521. ¿Podemos hablar?',tm:'10:20'}],hist:[]},
+
+  ana:{defName:'Ana Martínez',type:'worker',emoji:null,ini:'AM',defBg:'#80848e',
+    defSt:'Desconectada',wp:'#e5ddd5',cn:null,cs:null,photo:null,avBg:null,unread:1,
+    msgs:[{t:'ai',text:'Jefe, mañana no podré venir. Tengo cita médica 🏥\nSolicito permiso por favor.',tm:'ayer'}],hist:[]},
+};
+
+const WR={
+  maria:['Claro jefe, en un momento 👍','Entendido, ya está listo ✓','Lo envío de inmediato.'],
+  carlos:['Ok jefe, entendido.','Lo resuelvo ahora mismo.','Ya quedó, gracias.'],
+  ana:['Entendido, gracias.','Claro que sí.','Ok, lo tengo.'],
+};
+
+const CHIPS={
+  contadores:[
+    ['📎 Registrar factura','Adjunta una foto de ticket o factura y yo la proceso con análisis LISR completo y la guardo en Drive y Sheets.'],
+    ['💰 Analizar inversión','Quiero comprar una camioneta de $320,000 para entregas. Dame análisis VPN, TIR y 3 escenarios.'],
+    ['📊 Reporte financiero','¿Cómo vamos con las finanzas este mes? Genera gráficas de flujo de caja y composición de gastos.'],
+    ['💵 Presupuesto','¿Cuánto presupuesto me queda este mes? Compara con el mes pasado.'],
+  ],
+  asistente:[
+    ['📦 Inventario','Muéstrame el inventario completo con valores en tabla.'],
+    ['📅 Agenda','¿Qué hay en agenda esta semana? Organiza por prioridad.'],
+    ['👥 Equipo','Dame el estado de todo el equipo y sus pendientes.'],
+  ],
+  publicidad:[
+    ['📈 Analizar campaña','Analiza el rendimiento de nuestra última campaña con gráfica de métricas.'],
+    ['✍️ Posts Instagram','Crea 3 ideas de posts para Instagram con copy y hashtags.'],
+    ['📱 Estrategia redes','Mejor estrategia de redes sociales para mi negocio este mes.'],
+  ],
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════════════════
+// Restore persisted data (msgs, libroFiscal, activos, etc.)
+loadData();
+
+let cur='contadores', pf=null, recog=null, listening=false, nc=0, activePill='all';
+
+const ts = ()=>new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+const esc = s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const md = s=>esc(s).replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/_(.*?)_/g,'<em>$1</em>').replace(/\n/g,'<br>');
+const nm = id=>C[id].cn||C[id].defName;
+const st = id=>C[id].cs||C[id].defSt;
+const abg = id=>C[id].avBg||C[id].defBg;
+const fmt = v=>'$'+Number(v).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
+const $msgs = ()=>document.getElementById('msgs');
+
+// Clock
+setInterval(()=>{ const d=new Date(); document.getElementById('clock').textContent=d.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}); },1000);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// AVATAR HELPERS
+// ═══════════════════════════════════════════════════════════════════════════════
+function avHTML(id,size=50){
+  const c=C[id];
+  if(c.photo) return `<img src="${c.photo}" style="width:100%;height:100%;object-fit:cover;">`;
+  if(c.emoji) return `<span style="font-size:${size*.4}px;">${c.emoji}</span>`;
+  return `<span style="font-size:${size*.3}px;font-weight:700;">${c.ini||'?'}</span>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CHAT LIST
+// ═══════════════════════════════════════════════════════════════════════════════
+function lastMsg(id){
+  const msgs=C[id].msgs;
+  if(!msgs.length) return {text:'',tm:''};
+  const m=msgs[msgs.length-1];
+  let txt=m.text||'';
+  if(m.type==='excel_fiscal') txt='📊 Registro fiscal guardado';
+  else if(m.type==='drive_path') txt='📂 Guardado en Drive';
+  else if(m.type==='presupuesto') txt='💹 Análisis de inversión';
+  else if(m.type==='chart') txt='📊 Gráfica generada';
+  else if(m.type==='tabla') txt='📋 Tabla de datos';
+  else if(m.html) txt='📎 Archivo adjunto';
+  return {text:txt.slice(0,60), tm:m.tm||''};
+}
+
+function renderList(filter='', pill='all'){
+  const el=document.getElementById('chat-list');
+  el.innerHTML='';
+  const ids=Object.keys(C);
+  const filtered=ids.filter(id=>{
+    const c=C[id];
+    if(pill==='ai' && c.type!=='ai') return false;
+    if(pill==='workers' && c.type!=='worker') return false;
+    if(pill==='unread' && !c.unread) return false;
+    if(filter && !nm(id).toLowerCase().includes(filter.toLowerCase())) return false;
+    return true;
+  });
+
+  if(pill==='all'||pill==='ai'){
+    const aiIds=filtered.filter(id=>C[id].type==='ai');
+    if(aiIds.length){
+      const h=document.createElement('div'); h.className='sec-label'; h.textContent='AGENTES IA';
+      el.appendChild(h);
+      aiIds.forEach(id=>el.appendChild(makeChatRow(id)));
+    }
+  }
+  if(pill==='all'||pill==='workers'){
+    const wIds=filtered.filter(id=>C[id].type==='worker');
+    if(wIds.length){
+      const h=document.createElement('div'); h.className='sec-label'; h.textContent='EQUIPO';
+      el.appendChild(h);
+      wIds.forEach(id=>el.appendChild(makeChatRow(id)));
+    }
+  }
+  if(pill==='unread') filtered.forEach(id=>el.appendChild(makeChatRow(id)));
+
+  // Update tab badge
+  const total=ids.reduce((s,id)=>s+(C[id].unread||0),0);
+  const tb=document.getElementById('tab-notif');
+  if(tb){ tb.textContent=total; tb.style.display=total?'flex':'none'; }
+}
+
+function makeChatRow(id){
+  const c=C[id]; const lm=lastMsg(id);
+  const div=document.createElement('div'); div.className='chat-row';
+  div.onclick=()=>openChat(id);
+  const avEl=document.createElement('div');
+  avEl.className='av'; avEl.style.background=abg(id);
+  avEl.innerHTML=avHTML(id,50);
+  const ci=document.createElement('div'); ci.className='ci';
+  const top=document.createElement('div'); top.className='crow-top';
+  const name=document.createElement('div'); name.className='cname'; name.textContent=nm(id);
+  const time=document.createElement('div'); time.className='ctime'+(c.unread?' unread':''); time.textContent=lm.tm;
+  top.appendChild(name); top.appendChild(time);
+  const bot=document.createElement('div'); bot.className='crow-bot';
+  const prev=document.createElement('div'); prev.className='cprev';
+  const lastM=c.msgs[c.msgs.length-1];
+  if(lastM&&lastM.t==='me') prev.innerHTML=`<span class="dbl-check">✓✓</span> ${esc(lm.text||'')}`;
+  else prev.textContent=lm.text||'';
+  bot.appendChild(prev);
+  if(c.unread){ const badge=document.createElement('div'); badge.className='nbadge'; badge.textContent=c.unread; bot.appendChild(badge); }
+  ci.appendChild(top); ci.appendChild(bot);
+  div.appendChild(avEl); div.appendChild(ci);
+  return div;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════════════════════
+function openChat(id){
+  cur=id; C[id].unread=0;
+  const hav=document.getElementById('chat-hdr-av');
+  hav.className='av-sm'; hav.style.background=abg(id); hav.innerHTML=avHTML(id,36);
+  document.getElementById('chat-hdr-name').textContent=nm(id);
+  document.getElementById('chat-hdr-status').textContent=st(id);
+  $msgs().style.background=C[id].wp||'#e5ddd5';
+  document.getElementById('typing-bar').style.background=C[id].wp||'#e5ddd5';
+  // Show Sheets button only for AI chats when Sheets connected
+  document.getElementById('sheets-btn').style.display=(C[id].type==='ai'&&CFG.spreadsheetId)?'block':'none';
+  renderMsgs();
+  document.getElementById('S-chat').classList.add('open');
+  renderList(document.getElementById('search-inp').value, activePill);
+}
+
+function goBack(){
+  document.getElementById('S-chat').classList.remove('open');
+  closeAttachMenu();
+  setTimeout(()=>renderList(document.getElementById('search-inp').value, activePill),100);
+}
+
+function setPill(p){
+  activePill=p;
+  ['all','ai','workers','unread'].forEach(id=>{
+    const el=document.getElementById('pill-'+id);
+    if(el) el.className='pill '+(id===p?'on':'off');
+  });
+  renderList(document.getElementById('search-inp').value, p);
+}
+function filterChats(v){ renderList(v, activePill); }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MESSAGE RENDERING
+// ═══════════════════════════════════════════════════════════════════════════════
+function renderMsgs(){
+  $msgs().innerHTML='';
+  C[cur].msgs.forEach(m=>addDom(m));
+  if(!C[cur].msgs.some(m=>m.t==='me') && C[cur].type==='ai') addChips(cur);
+  $msgs().scrollTop=9999;
+}
+
+function addChips(id){
+  const area=$msgs(), chips=CHIPS[id];
+  if(!chips) return;
+  const w=document.createElement('div');
+  w.id='chips'; w.style.cssText='display:flex;flex-wrap:wrap;gap:7px;padding:6px 0;';
+  chips.forEach(([lbl,msg])=>{
+    const b=document.createElement('button'); b.className='chip'; b.textContent=lbl;
+    b.onclick=()=>{ w.remove(); document.getElementById('inp').value=msg; send(); };
+    w.appendChild(b);
+  });
+  area.appendChild(w);
+}
+
+function addDom(m){
+  const area=$msgs(), w=document.createElement('div');
+  w.className='fade-in';
+
+  if(m.type==='upload_progress'){
+    w.style.cssText='display:flex;flex-direction:column;align-items:flex-start;';
+    w.id=m.pid;
+    w.innerHTML=`<div class="upload-card"><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:18px;">☁️</span><div><div style="font-size:13px;font-weight:600;color:var(--gdk);">Subiendo a Drive...</div><div style="font-size:11px;color:var(--gray);">${esc(m.name||'')}</div></div></div><div class="progress-bar-wrap"><div class="progress-bar" id="${m.pid}-bar" style="width:${m.pct||0}%"></div></div></div>`;
+    area.appendChild(w); $msgs().scrollTop=9999; return;
+  }
+
+  if(m.type==='chart'){
+    const id='c'+(++nc);
+    w.style.cssText='display:flex;flex-direction:column;align-items:flex-start;';
+    w.innerHTML=`<div class="ccard"><div style="font-size:11px;font-weight:700;color:var(--gdk);margin-bottom:8px;">${esc(m.d.title||'')}</div><canvas id="${id}" height="160"></canvas></div>`;
+    area.appendChild(w); setTimeout(()=>mkChart(id,m.d),120); return;
+  }
+
+  if(m.type==='excel_fiscal'){
+    const d=m.d;
+    const tc=d.tipo==='Ingreso'?'#25d366':d.tipo==='Inversión'?'#0088cc':'#ed4245';
+    const ded=d.deducibilidad||'100%'; const dedPct=parseInt(ded);
+    const dedColor=dedPct===100?'#128c7e':dedPct>=50?'#f0b132':'#ed4245';
+    const driveLink=d.link_drive&&d.link_drive!=='pendiente'?`<a href="${d.link_drive}" target="_blank" style="font-size:10px;color:var(--indigo);font-weight:600;display:block;margin-top:4px;">📂 Ver en Drive ↗</a>`:'';
+    w.style.cssText='display:flex;flex-direction:column;align-items:flex-start;';
+    w.innerHTML=`<div class="xcard" style="max-width:300px;">
+      <div style="background:${tc};color:#fff;padding:7px 10px;font-size:11px;display:flex;justify-content:space-between;align-items:center;">
+        <span>📊 Libro Diario Fiscal</span>
+        <span style="background:rgba(255,255,255,.22);padding:1px 8px;border-radius:10px;font-weight:600;">${esc(d.tipo||'Egreso')}</span>
+      </div>
+      <table style="width:100%;border-collapse:collapse;">
+        <tr class="xrow"><td>Fecha</td><td><b>${esc(d.fecha||'')}</b></td></tr>
+        ${d.uuid?`<tr class="xrow"><td>UUID</td><td style="font-size:10px;word-break:break-all;font-family:monospace;">${esc(d.uuid.slice(0,24))}…</td></tr>`:''}
+        <tr class="xrow"><td>Categoría</td><td><span class="badge-pill" style="background:${tc}22;color:${tc};">${esc(d.categoria||'')}${d.subcategoria?' · '+esc(d.subcategoria):''}</span></td></tr>
+        ${d.rfc_emisor?`<tr class="xrow"><td>RFC</td><td style="font-family:monospace;font-size:11px;">${esc(d.rfc_emisor)}</td></tr>`:''}
+        <tr class="xrow"><td>Proveedor</td><td><b>${esc(d.proveedor||'')}</b></td></tr>
+        <tr class="xrow"><td>Concepto</td><td>${esc(d.concepto||'')}</td></tr>
+        <tr class="xrow"><td>Subtotal</td><td>${fmt(d.subtotal||0)}</td></tr>
+        <tr class="xrow"><td>IVA 16%</td><td>${fmt(d.iva||0)}</td></tr>
+        ${Number(d.retenciones||0)>0?`<tr class="xrow"><td>Retenciones</td><td style="color:#ed4245;">- ${fmt(d.retenciones)}</td></tr>`:''}
+        <tr class="xrow"><td style="font-weight:700;">TOTAL MXN</td><td style="font-weight:700;color:${tc};font-size:13px;">${fmt(d.total||0)}${d.error_aritmetico?` <span title="El cálculo Subtotal+IVA-Retenciones da ${fmt(d.total_calculado)}, pero se respeta el total del ticket" style="display:inline-block;background:#fff3cd;color:#856404;border:1px solid #f0b132;border-radius:6px;font-size:9px;padding:1px 5px;margin-left:4px;cursor:help;">⚠️ Error aritmético</span>`:''}</td></tr>
+        <tr class="xrow"><td>Estatus</td><td><span class="badge-pill" style="background:#d1fae5;color:#065f46;">${esc(d.estatus_pago||'Pagado')}</span></td></tr>
+        <tr class="xrow"><td>Deducible</td><td><span class="badge-pill" style="background:${dedColor}22;color:${dedColor};">${esc(ded)}</span> <span style="font-size:10px;color:#888;">${esc(d.articulo_lisr||'')}</span></td></tr>
+      </table>
+      <div style="padding:7px 10px;background:#f0fff4;font-size:10px;color:#128c7e;line-height:1.8;">
+        ✓ Registrado en Libro Fiscal #${libroFiscal.length}
+        ${gConnected?'<br>✓ Sheets sincronizado':''}
+        ${driveLink}
+      </div></div>`;
+    area.appendChild(w); sfxCaja(); return;
+  }
+
+  if(m.type==='drive_path'){
+    const d=m.d;
+    w.style.cssText='display:flex;flex-direction:column;align-items:flex-start;';
+    const link=d.webViewLink?`<a href="${d.webViewLink}" target="_blank" style="display:inline-block;margin-top:8px;background:rgba(255,255,255,.18);color:#fff;padding:5px 12px;border-radius:8px;font-size:11px;font-weight:600;text-decoration:none;">🔗 Abrir en Drive ↗</a>`:'';
+    w.innerHTML=`<div class="dcard">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="font-size:16px;">📂</span>
+        <span style="font-size:12px;font-weight:700;color:#90caf9;">Drive Organizado</span>
+        <span style="margin-left:auto;font-size:10px;background:rgba(255,255,255,.15);padding:1px 7px;border-radius:8px;">${gConnected?'✅ Guardado':'💾 Local'}</span>
+      </div>
+      <div style="font-size:10px;color:#b3d9ff;line-height:2;font-family:monospace;">
+        📁 EmpresaHub Pro/<br>&nbsp;&nbsp;📁 ${esc(d.año||'')}/<br>&nbsp;&nbsp;&nbsp;&nbsp;📁 ${esc(d.mes||'')}/<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;📁 ${esc(d.carpeta||'')}/<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;📄 <b style="color:#fff;">${esc(d.archivo||'')}</b>
+      </div>
+      ${link}
+    </div>`;
+    area.appendChild(w); sfxDrive(); return;
+  }
+
+  if(m.type==='presupuesto'){
+    const d=m.d;
+    const viable=d.recomendacion==='VIABLE'; const cond=d.recomendacion==='CONDICIONADO';
+    const rc=viable?'#25d366':cond?'#f0b132':'#ed4245';
+    const ri=d.riesgo==='Alto'?'#ed4245':d.riesgo==='Medio'?'#f0b132':'#25d366';
+    w.style.cssText='display:flex;flex-direction:column;align-items:flex-start;';
+    w.innerHTML=`<div class="pcard">
+      <div style="background:linear-gradient(135deg,#1a237e,#283593);color:#fff;padding:8px 11px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;font-weight:700;">💹 Análisis de Inversión</span>
+        <span style="background:${rc};color:#fff;padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700;">${esc(d.recomendacion||'—')}</span>
+      </div>
+      <div style="padding:8px 11px;border-bottom:1px solid #f0f0f0;">
+        <div style="font-weight:700;font-size:13px;color:#111;margin-bottom:2px;">${esc(d.proyecto||'')}</div>
+        <div style="font-size:11px;color:#888;">Inversión: <b style="color:#111;">${fmt(d.inversion_inicial||0)}</b></div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;">
+        <tr class="xrow"><td>VPN (12% anual)</td><td style="font-weight:700;color:${Number(d.van||0)>=0?'#128c7e':'#ed4245'};">${fmt(d.van||0)}</td></tr>
+        <tr class="xrow"><td>TIR</td><td style="font-weight:700;">${d.tir_pct||0}%</td></tr>
+        <tr class="xrow"><td>Payback</td><td>${d.payback_meses||0} meses</td></tr>
+        <tr class="xrow"><td>Riesgo</td><td><span class="badge-pill" style="background:${ri}22;color:${ri};">${esc(d.riesgo||'Medio')}</span></td></tr>
+      </table>
+      <div style="padding:7px 11px;background:#f8f9fa;border-top:1px solid #f0f0f0;">
+        <div style="font-size:10px;color:#888;margin-bottom:5px;font-weight:700;">ESCENARIOS</div>
+        <div class="esc-row" style="background:#d1fae522;border-radius:5px;"><span style="color:#065f46;font-size:11px;">📈 Optimista</span><span style="font-weight:700;color:#128c7e;">${fmt(d.escenario_opt||0)}</span></div>
+        <div class="esc-row"><span style="color:#1e40af;font-size:11px;">📊 Base</span><span style="font-weight:700;color:#0088cc;">${fmt(d.escenario_base||0)}</span></div>
+        <div class="esc-row" style="background:#fee2e222;"><span style="color:#991b1b;font-size:11px;">📉 Pesimista</span><span style="font-weight:700;color:#ed4245;">${fmt(d.escenario_pes||0)}</span></div>
+      </div>
+      ${d.justificacion?`<div style="padding:7px 11px;font-size:11px;color:#555;border-top:1px solid #f0f0f0;line-height:1.5;">${esc(d.justificacion)}</div>`:''}
+    </div>`;
+    area.appendChild(w); return;
+  }
+
+  if(m.type==='activo'){
+    const d=m.d; const pct=d.valor_original>0?Math.round((d.valor_actual/d.valor_original)*100):100;
+    w.style.cssText='display:flex;flex-direction:column;align-items:flex-start;';
+    w.innerHTML=`<div class="acard">
+      <div style="background:linear-gradient(135deg,#4a148c,#6a1b9a);color:#fff;padding:7px 10px;font-size:11px;font-weight:700;">🏢 Activo — Depreciación SAT</div>
+      <table style="width:100%;border-collapse:collapse;">
+        <tr class="xrow"><td>Activo</td><td><b>${esc(d.activo||'')}</b></td></tr>
+        <tr class="xrow"><td>Fecha compra</td><td>${esc(d.fecha_compra||'')}</td></tr>
+        <tr class="xrow"><td>Valor original</td><td>${fmt(d.valor_original||0)}</td></tr>
+        <tr class="xrow"><td>Tasa SAT</td><td>${d.tasa_depreciacion_anual||0}% anual</td></tr>
+        <tr class="xrow"><td>Dep. mensual</td><td style="color:#ed4245;">- ${fmt(d.depreciacion_mensual||0)}</td></tr>
+        <tr class="xrow"><td>Valor actual</td><td style="font-weight:700;color:#0088cc;">${fmt(d.valor_actual||0)}</td></tr>
+      </table>
+      <div style="padding:6px 10px;background:#f3e5f5;">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#6a1b9a;margin-bottom:4px;"><span>Valor retenido</span><span>${pct}%</span></div>
+        <div style="background:#e1bee7;border-radius:4px;height:5px;overflow:hidden;"><div style="background:#a855f7;height:100%;width:${pct}%;"></div></div>
+      </div>
+    </div>`;
+    area.appendChild(w); return;
+  }
+
+  if(m.type==='presupuesto_status'){
+    const gastado=gastadoMes; const ppto=presupuestoMensual;
+    const restante=ppto-gastado; const pct=Math.min(100,Math.round((gastado/ppto)*100));
+    const barClr=pct>80?'#ed4245':pct>60?'#f0b132':'#25d366';
+    w.style.cssText='display:flex;flex-direction:column;align-items:flex-start;';
+    const d=m.d;
+    w.innerHTML=`<div class="bcard">
+      <div style="background:linear-gradient(135deg,#004d40,#00695c);color:#fff;padding:7px 11px;font-size:11px;font-weight:700;">💰 Presupuesto Mensual</div>
+      <div style="padding:10px 11px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-size:11px;color:#666;">Gastado este mes</span>
+          <span style="font-weight:700;font-size:14px;color:#ed4245;">${fmt(gastado)}</span>
+        </div>
+        <div style="background:#f0f0f0;border-radius:6px;height:7px;overflow:hidden;margin-bottom:5px;">
+          <div style="background:${barClr};height:100%;width:${pct}%;transition:width .6s;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#888;margin-bottom:8px;"><span>${pct}% usado</span><span>Total: ${fmt(ppto)}</span></div>
+        <div style="background:#f0fff4;border-radius:8px;padding:8px 10px;text-align:center;">
+          <div style="font-size:10px;color:#065f46;margin-bottom:2px;">Te quedan</div>
+          <div style="font-size:20px;font-weight:800;color:#128c7e;">${fmt(restante)}</div>
+        </div>
+        ${d.variacion_vs_mes_anterior_pct?`<div style="margin-top:7px;font-size:10px;color:${Number(d.variacion_vs_mes_anterior_pct)>0?'#ed4245':'#128c7e'};text-align:center;">${Number(d.variacion_vs_mes_anterior_pct)>0?'↑':'↓'} ${Math.abs(d.variacion_vs_mes_anterior_pct)}% vs mes anterior</div>`:''}
+      </div>
+    </div>`;
+    area.appendChild(w); return;
+  }
+
+  if(m.type==='tabla'){
+    const d=m.d;
+    const cols=(d.cols||[]).map(c=>`<th style="padding:6px 10px;text-align:left;font-weight:700;font-size:11px;background:#f5f5f5;border-bottom:1px solid #e0e0e0;color:#555;">${esc(c)}</th>`).join('');
+    const rows=(d.rows||[]).map(r=>`<tr>${r.map(c=>`<td style="padding:6px 10px;border-bottom:1px solid #f5f5f5;font-size:12px;">${esc(String(c))}</td>`).join('')}</tr>`).join('');
+    w.style.cssText='display:flex;flex-direction:column;align-items:flex-start;';
+    w.innerHTML=`<div class="tcard"><div style="padding:7px 10px;background:#0088cc;color:#fff;font-size:12px;font-weight:700;">${esc(d.title||'Datos')}</div><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;"><thead><tr>${cols}</tr></thead><tbody>${rows}</tbody></table></div></div>`;
+    area.appendChild(w); return;
+  }
+
+  // Normal text bubble
+  const isMe=m.t==='me';
+  w.style.cssText=`display:flex;flex-direction:column;${isMe?'align-items:flex-end;':'align-items:flex-start;'}`;
+  let html=m.html||md(m.text||'');
+  w.innerHTML=`<div class="bbl ${isMe?'me':'rx'}">${html}<span class="tm">${m.tm||ts()}${isMe?' <span style="color:var(--blue);">✓✓</span>':''}</span></div>`;
+  area.appendChild(w);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CHARTS
+// ═══════════════════════════════════════════════════════════════════════════════
+function mkChart(id,d){
+  const ctx=document.getElementById(id); if(!ctx) return;
+  if(d.type==='pie'||d.type==='doughnut'){
+    new Chart(ctx,{type:'doughnut',data:{labels:d.labels,datasets:[{data:d.data,backgroundColor:d.colors||['#25d366','#ed4245','#f0b132','#0088cc','#a855f7'],borderWidth:2,hoverOffset:4}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:7,boxWidth:10}}}}});
+  } else {
+    new Chart(ctx,{type:'bar',data:{labels:d.labels,datasets:(d.datasets||[]).map(ds=>({label:ds.label,data:ds.data,backgroundColor:ds.color+'99',borderColor:ds.color,borderWidth:1.5,borderRadius:4}))},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:7,boxWidth:10}}},scales:{y:{beginAtZero:true,ticks:{font:{size:9},callback:v=>'$'+Number(v).toLocaleString('es-MX')}}}}});
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SEND MESSAGE & AI FLOW
+// ═══════════════════════════════════════════════════════════════════════════════
+async function send(){
+  const inp=document.getElementById('inp');
+  const txt=inp.value.trim();
+  if(!txt && !pf) return;
+  closeAttachMenu();
+
+  const file=pf; pf=null; inp.placeholder='Mensaje';
+  const um={
+    t:'me',
+    html: file ? `📎 <em style="font-size:11px;color:#555;">${esc(file.name)}</em>${txt?'<br>'+esc(txt):''}` : null,
+    text: txt||(file?'📎 Archivo adjunto':''),
+    tm: ts()
+  };
+  C[cur].msgs.push(um); addDom(um); inp.value=''; sfxS(); $msgs().scrollTop=9999;
+  saveData();
+
+  const tipEl=document.getElementById('typing-bar');
+
+  if(C[cur].type==='ai'){
+    tipEl.textContent=`${nm(cur)} está analizando...`;
+    try {
+      const content=[];
+      let driveLink='', driveWebLink='';
+
+      // Upload file to Drive if connected
+      if(file && gConnected){
+        try{
+          showToast('⬆️ Subiendo a Drive...');
+          // Add upload progress bubble
+          const pid='up'+Date.now();
+          const upMsg={type:'upload_progress', pid, name:file.name, pct:30};
+          C[cur].msgs.push(upMsg); addDom(upMsg);
+
+          // Animate progress
+          let pct=30;
+          const interval=setInterval(()=>{
+            pct=Math.min(90,pct+20);
+            const bar=document.getElementById(pid+'-bar');
+            if(bar) bar.style.width=pct+'%';
+          },500);
+
+          // Get folder structure
+          const now=new Date();
+          const year=now.getFullYear().toString();
+          const months=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+          const month=(now.getMonth()+1).toString().padStart(2,'0')+'_'+months[now.getMonth()];
+          const folderId=await driveGetStructure(year, month, 'Facturas_Recibidas');
+
+          // Upload file
+          const timestamp=now.toISOString().slice(0,10);
+          const safeName=txt?txt.slice(0,20).replace(/[^a-zA-Z0-9]/g,'_'):'Factura';
+          const fileName=`${timestamp}_${safeName}.${file.ext}`;
+          const uploaded=await driveUpload(file.b64, file.mime, fileName, folderId);
+
+          clearInterval(interval);
+          // Remove progress bubble
+          const upEl=document.getElementById(pid);
+          if(upEl) upEl.remove();
+          C[cur].msgs=C[cur].msgs.filter(m=>m.pid!==pid);
+
+          if(uploaded.id){
+            driveLink=`https://drive.google.com/file/d/${uploaded.id}/view`;
+            driveWebLink=uploaded.webViewLink||driveLink;
+            showToast('✅ Guardado en Drive');
+            sfxDrive();
+          }
+        }catch(e){ showToast('⚠️ Error al subir a Drive: '+e.message); }
+      }
+
+      // Build AI message content
+      if(file){
+        if(file.mime.startsWith('image/')){
+          content.push({type:'image', source:{type:'base64', media_type:file.mime, data:file.b64}});
+        }
+        const fileHint=driveLink?` La imagen ya fue guardada en Drive: ${driveLink}` : '';
+        content.push({type:'text', text:(txt||'Procesa esta imagen y registra el movimiento contable. Incluye excel_fiscal y drive_path.')+fileHint});
+      } else {
+        content.push({type:'text', text:txt});
+      }
+
+      const userMsg={role:'user', content:content.length===1?content[0].text:content};
+      C[cur].hist.push(userMsg);
+
+      const reply=await aiCall(C[cur].hist, PROMPTS[C[cur].pk]);
+      C[cur].hist.push({role:'assistant', content:reply});
+      saveData();
+
+      // If we have a drive link, inject it into the reply before processing
+      const replyWithLink=driveLink?reply.replace('"link_drive":"pendiente"', `"link_drive":"${driveLink}"`):reply;
+      procReply(replyWithLink, driveWebLink);
+
+    } catch(e){
+      const em={t:'ai', text:'⚠️ Error: '+e.message, tm:ts()};
+      C[cur].msgs.push(em); addDom(em); $msgs().scrollTop=9999;
+      showToast('Error de conexión');
+    } finally {
+      tipEl.textContent='';
+    }
+
+  } else {
+    // Worker simulated response
+    tipEl.textContent=`${nm(cur)} está escribiendo...`;
+    setTimeout(()=>{
+      const r=WR[cur]?.[Math.floor(Math.random()*WR[cur].length)]||'Entendido.';
+      const rm={t:'ai', text:r, tm:ts()};
+      C[cur].msgs.push(rm); addDom(rm); $msgs().scrollTop=9999; sfxR();
+      tipEl.textContent='';
+    }, 1400+Math.random()*600);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// REPLY PROCESSOR — parse XML tags from AI response
+// ═══════════════════════════════════════════════════════════════════════════════
+async function procReply(raw, driveWebLink=''){
+  let s=raw;
+  const push=(type,d)=>{ const m={type,d}; C[cur].msgs.push(m); addDom(m); };
+
+  // libro_cmd → edit/delete libro fiscal entries
+  for(const match of [...s.matchAll(/<libro_cmd>([\s\S]*?)<\/libro_cmd>/g)]){
+    try{
+      const cmd=JSON.parse(match[1]);
+      let idx=typeof cmd.indice==='number'?cmd.indice:null;
+      // Resolve by provider or UUID search
+      if(idx===null && cmd.buscar_proveedor){
+        idx=libroFiscal.findIndex(r=>(r.proveedor||'').toLowerCase().includes(cmd.buscar_proveedor.toLowerCase()));
+      }
+      if(idx===null && cmd.buscar_uuid){
+        idx=libroFiscal.findIndex(r=>(r.uuid||'').includes(cmd.buscar_uuid));
+      }
+      if(idx===null) idx=-1;
+      // Negative index: -1 = last, -2 = second-to-last, etc.
+      if(idx<0) idx=libroFiscal.length+idx;
+      if(idx>=0 && idx<libroFiscal.length){
+        if(cmd.action==='delete'){
+          const removed=libroFiscal.splice(idx,1)[0];
+          gastadoMes=Math.max(0, gastadoMes-Number(removed.total||0));
+          const rm={t:'ai', text:`🗑️ Registro eliminado del Libro Diario:\n**${removed.proveedor||'—'}** · ${fmt(removed.total||0)} · ${removed.fecha||''}`, tm:ts()};
+          C[cur].msgs.push(rm); addDom(rm);
+          saveData(); showToast('🗑️ Registro eliminado');
+        } else if(cmd.action==='edit' && cmd.campo){
+          const old=libroFiscal[idx][cmd.campo];
+          libroFiscal[idx][cmd.campo]=cmd.valor;
+          // Recalculate gastadoMes if total changed
+          if(cmd.campo==='total') gastadoMes=libroFiscal.reduce((s,r)=>s+Number(r.total||0),0);
+          const em={t:'ai', text:`✏️ Registro actualizado:\n**${libroFiscal[idx].proveedor||'—'}** · Campo **${cmd.campo}**: ${old} → ${cmd.valor}`, tm:ts()};
+          C[cur].msgs.push(em); addDom(em);
+          saveData(); showToast('✅ Registro editado');
+        }
+      } else {
+        const nm={t:'ai', text:'⚠️ No encontré ese registro en el Libro Fiscal.', tm:ts()};
+        C[cur].msgs.push(nm); addDom(nm);
+      }
+    }catch(e){ console.warn('libro_cmd parse error',e); }
+    s=s.replace(match[0],'');
+  }
+
+  // excel_fiscal → save to Sheets
+  for(const match of [...s.matchAll(/<excel_fiscal>([\s\S]*?)<\/excel_fiscal>/g)]){
+    try{
+      const d=JSON.parse(match[1]);
+      if(driveWebLink) d.link_drive=driveWebLink;
+      d.registrado=ts();
+      // ── VALIDACIÓN ARITMÉTICA ──────────────────────────────────────────────
+      const subtotal=Number(d.subtotal||0);
+      const iva=Number(d.iva||0);
+      const retenciones=Number(d.retenciones||0);
+      const totalTicket=Number(d.total||0);
+      const totalCalc=Math.round((subtotal+iva-retenciones)*100)/100;
+      if(totalTicket>0 && Math.abs(totalCalc-totalTicket)>0.10){
+        d.error_aritmetico=true;
+        d.total_calculado=totalCalc;
+        // Respect the ticket's stated total — do NOT override it
+      }
+      // ──────────────────────────────────────────────────────────────────────
+      libroFiscal.push({...d}); gastadoMes+=Number(d.total||0);
+      push('excel_fiscal',d);
+      saveData();
+      // Save to Google Sheets
+      if(gConnected && CFG.spreadsheetId){
+        try{
+          await sheetsAppend('Libro Fiscal',[
+            [d.fecha||'',d.uuid||'',d.tipo||'',d.categoria||'',d.subcategoria||'',
+             d.rfc_emisor||'',d.proveedor||'',d.concepto||'',d.subtotal||0,d.iva||0,
+             d.retenciones||0,d.total||0,d.link_drive||'',d.estatus_pago||'',
+             d.deducibilidad||'',d.articulo_lisr||'',d.registrado||'']
+          ]);
+          showToast('📋 Registrado en Google Sheets');
+          document.getElementById('sheets-btn').style.display='block';
+        }catch(e){ showToast('⚠️ Error Sheets: '+e.message); }
+      }
+    }catch(e){ console.warn('excel_fiscal parse error',e); }
+    s=s.replace(match[0],'');
+  }
+
+  // drive_path → show drive card
+  for(const match of [...s.matchAll(/<drive_path>([\s\S]*?)<\/drive_path>/g)]){
+    try{
+      const d=JSON.parse(match[1]);
+      if(driveWebLink) d.webViewLink=driveWebLink;
+      push('drive_path',d);
+    }catch(e){}
+    s=s.replace(match[0],'');
+  }
+
+  // presupuesto (investment)
+  for(const match of [...s.matchAll(/<presupuesto>([\s\S]*?)<\/presupuesto>/g)]){
+    try{
+      const d=JSON.parse(match[1]);
+      inversiones.push({...d, fecha:ts()});
+      push('presupuesto',d);
+      saveData();
+      if(gConnected && CFG.spreadsheetId){
+        try{
+          await sheetsAppend('Inversiones',[
+            [d.proyecto||'',d.inversion_inicial||0,d.van||0,d.tir_pct||0,
+             d.payback_meses||0,d.riesgo||'',d.recomendacion||'',d.justificacion||'',ts()]
+          ]);
+        }catch(e){}
+      }
+    }catch(e){}
+    s=s.replace(match[0],'');
+  }
+
+  // activo (asset)
+  for(const match of [...s.matchAll(/<activo>([\s\S]*?)<\/activo>/g)]){
+    try{
+      const d=JSON.parse(match[1]);
+      activos.push({...d, fecha_registro:ts()});
+      push('activo',d);
+      saveData();
+      if(gConnected && CFG.spreadsheetId){
+        try{
+          await sheetsAppend('Activos',[
+            [d.activo||'',d.fecha_compra||'',d.valor_original||0,d.tasa_depreciacion_anual||0,
+             d.depreciacion_mensual||0,d.valor_actual||0,d.vida_util_restante_meses||0,ts()]
+          ]);
+        }catch(e){}
+      }
+    }catch(e){}
+    s=s.replace(match[0],'');
+  }
+
+  // presupuesto_status (budget dashboard)
+  for(const match of [...s.matchAll(/<presupuesto_status>([\s\S]*?)<\/presupuesto_status>/g)]){
+    try{ push('presupuesto_status', JSON.parse(match[1])); }catch(e){}
+    s=s.replace(match[0],'');
+  }
+
+  // charts
+  for(const match of [...s.matchAll(/<chart>([\s\S]*?)<\/chart>/g)]){
+    try{ push('chart', JSON.parse(match[1])); }catch(e){}
+    s=s.replace(match[0],'');
+  }
+
+  // tables
+  for(const match of [...s.matchAll(/<tabla>([\s\S]*?)<\/tabla>/g)]){
+    try{ push('tabla', JSON.parse(match[1])); }catch(e){}
+    s=s.replace(match[0],'');
+  }
+
+  s=s.trim();
+  if(s){ const m={t:'ai', text:s, tm:ts()}; C[cur].msgs.push(m); addDom(m); sfxR(); saveData(); }
+  $msgs().scrollTop=9999;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// FILE / PHOTO HANDLING
+// ═══════════════════════════════════════════════════════════════════════════════
+function toggleAttachMenu(){
+  const m=document.getElementById('attach-menu');
+  m.classList.toggle('show');
+}
+function closeAttachMenu(){
+  document.getElementById('attach-menu').classList.remove('show');
+}
+
+function triggerFile(accept){
+  closeAttachMenu();
+  const fi=document.getElementById('fi-gallery');
+  fi.accept=accept; fi.click();
+}
+function triggerCamera(){
+  closeAttachMenu();
+  document.getElementById('fi-camera').click();
+}
+
+function onFile(e, source){
+  const file=e.target.files[0]; if(!file) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    const b64=ev.target.result.split(',')[1];
+    const ext=file.name.split('.').pop().toLowerCase()||'jpg';
+    pf={ b64, mime:file.type||'image/jpeg', name:file.name, ext, source };
+    document.getElementById('inp').placeholder=`📎 ${file.name}`;
+    document.getElementById('inp').focus();
+    showToast('📎 '+file.name+' listo para enviar');
+  };
+  r.readAsDataURL(file);
+  e.target.value='';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// VOICE INPUT
+// ═══════════════════════════════════════════════════════════════════════════════
+function togMic(){
+  const btn=document.getElementById('micbtn');
+  if(listening){ recog&&recog.stop(); return; }
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){
+    showToast('Voz disponible en Chrome o Safari iOS'); return;
+  }
+  recog=new(window.SpeechRecognition||window.webkitSpeechRecognition)();
+  recog.lang='es-MX'; recog.continuous=false; recog.interimResults=false;
+  recog.onstart=()=>{ listening=true; btn.classList.add('active'); document.getElementById('inp').placeholder='🎤 Escuchando…'; };
+  recog.onresult=e=>{ document.getElementById('inp').value=e.results[0][0].transcript; document.getElementById('inp').placeholder='Mensaje'; };
+  recog.onend=recog.onerror=()=>{ listening=false; btn.classList.remove('active'); document.getElementById('inp').placeholder='Mensaje'; };
+  recog.start();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// BOTTOM SHEETS
+// ═══════════════════════════════════════════════════════════════════════════════
+function openSheet(type){
+  const sheets={wallpaper:sheetWall, photo:sheetPhoto, name:sheetName, settings:sheetSet, libro:sheetLibro, sync:sheetSync};
+  if(sheets[type]){ document.getElementById('modal-body').innerHTML=sheets[type](); document.getElementById('modal-ov').classList.add('show'); }
+}
+function closeSheet(){ document.getElementById('modal-ov').classList.remove('show'); }
+function shH(emoji,title){ return `<div class="sh-hdr"><span class="sh-title">${emoji} ${title}</span><button class="sh-close" onclick="closeSheet()">✕</button></div>`; }
+
+function sheetWall(){
+  const c=C[cur];
+  return shH('🎨','Fondo del chat')+`<div style="padding:16px;">
+  <div style="font-size:13px;color:var(--gray);margin-bottom:12px;">"${nm(cur)}"</div>
+  <div class="wp-grid" style="margin-bottom:16px;">
+  ${WP.map(w=>`<div class="wp-item" onclick="setWp('${w.id}')"><div class="wp-swatch${c.wp===w.bg?' sel':''}" data-wpid="${w.id}" style="background:${w.bg};"></div><div class="wp-lbl">${w.lbl}</div></div>`).join('')}
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;border-top:.5px solid var(--sep);padding-top:14px;">
+    <input type="color" id="cwp" value="${c.wp||'#e5ddd5'}" style="width:44px;height:36px;border-radius:8px;border:.5px solid var(--sep);cursor:pointer;padding:2px;">
+    <button onclick="setWp('custom')" style="flex:1;background:var(--g);color:#fff;border:none;border-radius:10px;padding:10px;font-size:15px;cursor:pointer;font-family:var(--font);font-weight:600;">Aplicar color</button>
+  </div></div>`;
+}
+function setWp(id){
+  let bg=id==='custom'?document.getElementById('cwp').value:(WP.find(w=>w.id===id)||{bg:'#e5ddd5'}).bg;
+  C[cur].wp=bg; $msgs().style.background=bg; document.getElementById('typing-bar').style.background=bg;
+  document.querySelectorAll('.wp-swatch').forEach(el=>el.classList.toggle('sel',el.dataset.wpid===id));
+}
+
+function sheetPhoto(){
+  const c=C[cur];
+  return shH('🖼️','Foto y avatar')+`<div style="padding:20px;display:flex;flex-direction:column;align-items:center;gap:16px;">
+  <div id="avpv" onclick="document.getElementById('avf').click()" style="width:90px;height:90px;border-radius:50%;background:${abg(cur)};display:flex;align-items:center;justify-content:center;font-size:34px;overflow:hidden;border:3px solid var(--g);cursor:pointer;">
+  ${c.photo?`<img src="${c.photo}" style="width:100%;height:100%;object-fit:cover;">`:(c.emoji||c.ini||'👤')}</div>
+  <div style="font-size:13px;color:var(--gray);">Toca para cambiar la foto</div>
+  <input id="avf" type="file" accept="image/*" style="display:none;" onchange="onAvF(event)">
+  ${c.photo?`<button onclick="rmPh()" style="background:var(--red);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:14px;cursor:pointer;font-family:var(--font);">🗑 Quitar foto</button>`:''}
+  <div style="width:100%;border-top:.5px solid var(--sep);padding-top:16px;">
+    <div style="font-size:13px;color:var(--gray);margin-bottom:10px;">Color del avatar</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+    ${AVC.map(col=>`<div class="av-color${abg(cur)===col?' sel':''}" onclick="setAvC('${col}')" data-col="${col}" style="background:${col};"></div>`).join('')}
+    </div>
+  </div></div>`;
+}
+function onAvF(e){ const file=e.target.files[0]; if(!file) return; const r=new FileReader(); r.onload=ev=>{ C[cur].photo=ev.target.result; const p=document.getElementById('avpv'); if(p){p.style.background='transparent';p.innerHTML=`<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;">`;}; updChatHdr(); }; r.readAsDataURL(file); e.target.value=''; }
+function rmPh(){ C[cur].photo=null; updChatHdr(); closeSheet(); }
+function setAvC(col){ C[cur].avBg=col; document.querySelectorAll('.av-color').forEach(el=>el.classList.toggle('sel',el.dataset.col===col)); const p=document.getElementById('avpv'); if(p&&!C[cur].photo)p.style.background=col; updChatHdr(); }
+function updChatHdr(){ const hav=document.getElementById('chat-hdr-av'); if(hav){hav.style.background=abg(cur);hav.innerHTML=avHTML(cur,36);} renderList(document.getElementById('search-inp').value,activePill); }
+
+function sheetName(){
+  return shH('✏️','Editar nombre y estado')+`<div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
+  <div><label class="lbl">Nombre</label><input id="ninp" class="mi-inp" type="text" value="${esc(nm(cur))}" placeholder="Nombre"></div>
+  <div><label class="lbl">Estado</label><input id="sinp" class="mi-inp" type="text" value="${esc(st(cur))}" placeholder="Estado"></div>
+  <button onclick="saveNm()" style="background:var(--g);color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;cursor:pointer;font-family:var(--font);font-weight:700;">Guardar</button>
+  </div>`;
+}
+function saveNm(){ const n=document.getElementById('ninp').value.trim(); const s=document.getElementById('sinp').value.trim(); if(n)C[cur].cn=n; if(s)C[cur].cs=s; document.getElementById('chat-hdr-name').textContent=nm(cur); document.getElementById('chat-hdr-status').textContent=st(cur); renderList(document.getElementById('search-inp').value,activePill); closeSheet(); }
+
+function sheetLibro(){
+  const rows=libroFiscal.length?libroFiscal.map(e=>`
+    <tr style="border-bottom:.5px solid #f0f0f0;">
+      <td style="padding:8px 10px;font-size:11px;color:#888;">${esc(e.fecha||'')}</td>
+      <td style="padding:8px 10px;font-size:12px;"><b>${esc(e.proveedor||'')}</b></td>
+      <td style="padding:8px 10px;font-size:12px;text-align:right;font-weight:700;color:#ed4245;">${fmt(e.total||0)}</td>
+      <td style="padding:8px 10px;font-size:11px;text-align:center;color:#128c7e;">${esc(e.deducibilidad||'')}</td>
+    </tr>`).join(''):`<tr><td colspan="4" style="padding:24px;text-align:center;color:var(--gray);font-size:14px;">Sin registros todavía.<br>Adjunta una factura al Contador.</td></tr>`;
+  const total=libroFiscal.reduce((s,e)=>s+Number(e.total||0),0);
+  return shH('📊','Libro Diario Fiscal')+`<div style="padding:14px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#f0fff4;border-radius:10px;margin-bottom:12px;">
+    <span style="font-size:13px;color:#065f46;">${libroFiscal.length} registros</span>
+    <span style="font-weight:800;font-size:16px;color:#128c7e;">${fmt(total)}</span>
+  </div>
+  ${CFG.spreadsheetId?`<button onclick="openSheetsLink()" style="width:100%;margin-bottom:12px;background:#1a73e8;color:#fff;border:none;border-radius:10px;padding:11px;font-size:14px;cursor:pointer;font-family:var(--font);font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;"><span>📋</span> Ver en Google Sheets</button>`:''}
+  <div style="overflow-x:auto;border-radius:8px;border:.5px solid var(--sep);">
+  <table style="width:100%;border-collapse:collapse;">
+    <thead><tr style="background:#f5f5f5;">
+      <th style="padding:8px 10px;text-align:left;font-size:11px;color:var(--gray);font-weight:700;">Fecha</th>
+      <th style="padding:8px 10px;text-align:left;font-size:11px;color:var(--gray);font-weight:700;">Proveedor</th>
+      <th style="padding:8px 10px;text-align:right;font-size:11px;color:var(--gray);font-weight:700;">Total</th>
+      <th style="padding:8px 10px;text-align:center;font-size:11px;color:var(--gray);font-weight:700;">Ded.</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>
+  ${libroFiscal.length?`<button onclick="exportarCSV()" style="width:100%;margin-top:14px;background:var(--g);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;cursor:pointer;font-family:var(--font);font-weight:700;">📥 Exportar a Excel (CSV)</button>`:''}
+  </div>`;
+}
+
+function exportarCSV(){
+  const header=['Fecha','UUID','Tipo','Categoría','Subcategoría','RFC Emisor','Proveedor','Concepto','Subtotal','IVA','Retenciones','Total MXN','Link Drive','Estatus Pago','Deducibilidad','Artículo LISR'];
+  const rows=libroFiscal.map(e=>[e.fecha||'',e.uuid||'',e.tipo||'',e.categoria||'',e.subcategoria||'',e.rfc_emisor||'',e.proveedor||'',e.concepto||'',e.subtotal||0,e.iva||0,e.retenciones||0,e.total||0,e.link_drive||'',e.estatus_pago||'',e.deducibilidad||'',e.articulo_lisr||'']);
+  const csv=[header,...rows].map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a');
+  a.href=url; a.download=`Libro_Fiscal_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+  URL.revokeObjectURL(url); sfxCaja();
+}
+
+function sheetSync(){
+  return shH('🔗','Sincronización')+`<div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
+  <div style="background:${gConnected?'#f0fff4':'#FFF3CD'};border-radius:12px;padding:14px;">
+    <div style="font-size:14px;font-weight:700;margin-bottom:6px;">${gConnected?'✅ Google conectado':'⚠️ Google no conectado'}</div>
+    <div style="font-size:12px;color:var(--gray);line-height:1.8;">
+      ${gConnected?`Drive: activo ✓<br>Sheets: activo ✓<br>Libro Fiscal: ${libroFiscal.length} registros`:'Las facturas se guardan solo localmente.'}
+    </div>
+  </div>
+  ${CFG.spreadsheetId?`<button onclick="openSheetsLink()" style="background:#1a73e8;color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;cursor:pointer;font-family:var(--font);font-weight:700;width:100%;">📋 Abrir Libro Fiscal en Sheets</button>`:''}
+  ${CFG.driveFolderId?`<button onclick="window.open('https://drive.google.com/drive/folders/'+CFG.driveFolderId,'_blank')" style="background:var(--g);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;cursor:pointer;font-family:var(--font);font-weight:700;width:100%;">📂 Abrir carpeta en Drive</button>`:''}
+  <button onclick="reconnectGoogle()" style="background:var(--glite);color:var(--gdk);border:1.5px solid var(--g);border-radius:12px;padding:12px;font-size:14px;cursor:pointer;font-family:var(--font);font-weight:700;width:100%;">${gConnected?'🔄 Reconectar Google':'🔗 Conectar Google'}</button>
+  </div>`;
+}
+
+function reconnectGoogle(){ closeSheet(); if(!CFG.googleClientId){ openSheet('settings'); } else { signInGoogle(); } }
+
+function sheetSet(){
+  return shH('⚙️','EmpresaHub Pro v4')+`<div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
+  <div style="background:var(--glite);border-radius:12px;padding:14px;font-size:13px;color:var(--gray);line-height:2;">
+    Versión 4.0 · Motor: Claude Sonnet 4<br>
+    <span style="color:var(--g);font-weight:700;">Libro Fiscal:</span> ${libroFiscal.length} registros<br>
+    <span style="color:var(--g);font-weight:700;">Activos:</span> ${activos.length} registrados<br>
+    <span style="color:var(--g);font-weight:700;">Google:</span> ${gConnected?'✅ Conectado':'❌ Sin conectar'}<br>
+    Actualización: ${new Date().toLocaleDateString('es-MX')}
+  </div>
+  <div style="background:var(--glite);border-radius:12px;padding:14px;">
+    <div style="font-size:14px;font-weight:700;color:var(--black);margin-bottom:10px;">Módulos activos</div>
+    <div style="font-size:13px;color:#3C3C43;line-height:2.2;">
+      🔬 OCR Fiscal + LISR (Art. 28) ✓<br>
+      ☁️ Google Drive organizado ✓<br>
+      📋 Google Sheets (Libro Fiscal) ✓<br>
+      📷 Cámara + Galería móvil ✓<br>
+      💹 VPN · TIR · Payback · 3 Escenarios ✓<br>
+      📊 Gráficas + Tablas dinámicas ✓<br>
+      🏢 Activos + Depreciación SAT ✓<br>
+      💬 Lenguaje natural + presupuesto ✓<br>
+      🎤 Voz es-MX (Chrome/Safari) ✓<br>
+      📥 Exportar CSV ✓
+    </div>
+  </div>
+  <div style="background:var(--glite);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;">
+    <div style="font-size:14px;font-weight:700;">Cambiar configuración</div>
+    <label class="lbl">API Key Anthropic</label>
+    <input class="mi-inp" type="password" id="cfg-ak" value="${CFG.anthropicKey}" placeholder="sk-ant-api03-…">
+    <label class="lbl">Google Client ID</label>
+    <input class="mi-inp" type="text" id="cfg-gid" value="${CFG.googleClientId||''}" placeholder="12345…apps.googleusercontent.com">
+    <button onclick="saveCfgChanges()" style="background:var(--g);color:#fff;border:none;border-radius:10px;padding:12px;font-size:15px;cursor:pointer;font-family:var(--font);font-weight:700;">💾 Guardar cambios</button>
+  </div>
+  <button onclick="reconnectGoogle()" style="background:var(--glite);color:var(--gdk);border:1.5px solid var(--g);border-radius:12px;padding:12px;font-size:14px;cursor:pointer;font-family:var(--font);font-weight:700;">🔗 ${gConnected?'Reconectar':'Conectar'} Google</button>
+  <div style="background:#FFF3CD;border-radius:12px;padding:12px;font-size:13px;color:#856404;">
+    <b>Próximo:</b> Módulo Nómina, Clientes y Facturación CFDI
+  </div>
+  </div>`;
+}
+
+function saveCfgChanges(){
+  const ak=document.getElementById('cfg-ak').value.trim();
+  const gid=document.getElementById('cfg-gid').value.trim();
+  if(ak) CFG.anthropicKey=ak;
+  if(gid){ CFG.googleClientId=gid; initGoogleAuth(); }
+  saveCFG(); closeSheet(); showToast('✅ Configuración guardada');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════════════════
+window.addEventListener('load', ()=>{
+  if(!checkSetup()) return;
+  updateSyncBadge();
+  renderList('','all');
+
+  // Try to reconnect Google silently if we had it before
+  if(CFG.googleClientId && CFG.googleConnected){
+    setTimeout(()=>{
+      initGoogleAuth();
+      if(tokenClient){
+        tokenClient.callback = resp=>{
+          if(!resp.error){
+            gToken=resp.access_token;
+            gTokenExpiry=Date.now()+(resp.expires_in*1000)-30000;
+            gConnected=true;
+            updateSyncBadge();
+            document.getElementById('sheets-btn').style.display=CFG.spreadsheetId?'block':'none';
+            showToast('✅ Google reconectado');
+          }
+        };
+        try{ tokenClient.requestAccessToken({prompt:''}); }catch(e){}
+      }
+    },2000);
+  }
+});
+
+// Close attach menu when clicking elsewhere
+document.addEventListener('click', e=>{
+  const am=document.getElementById('attach-menu');
+  const ab=document.getElementById('attach-btn');
+  if(am&&ab&&!am.contains(e.target)&&!ab.contains(e.target)) am.classList.remove('show');
+});
+</script>
+</body>
+</html>
